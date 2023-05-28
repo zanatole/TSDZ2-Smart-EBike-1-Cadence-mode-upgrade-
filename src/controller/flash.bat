@@ -1,15 +1,29 @@
 @echo off
-PATH = %PATH%;C:\STMicroelectronics\st_toolset\stvp;"C:\Program Files (x86)\STMicroelectronics\st_toolset\stvp"
+PATH = %PATH%;%~dp0..\..\tools\tool-stm8flash;"C:\STMicroelectronics\st_toolset\stvp";"C:\Program Files (x86)\STMicroelectronics\st_toolset\stvp"
 
+:FLASH
 STVP_CmdLine -BoardName=ST-LINK -ProgMode=SWIM -Port=USB -Device=STM8S105x6 -FileProg=../../bin/main.ihx -FileData=data_empty.ihx -verbose -no_loop -verif -no_warn_protect
-if errorlevel == 1 goto FAIL
-echo Flash successful, press any key to close...
+if errorlevel 1 goto STM8FLASH
+goto PASS
+
+:STM8FLASH
+echo.
+echo Flashing using STVP failed. Press key to try STM8FLASH tool..
 pause > nul
+make clear_eeprom
+make flash
+if errorlevel 1 goto FAIL
 
 :PASS
+echo.
+echo Flash successful, press any key to close...
+pause > nul
 goto EXIT
 :FAIL
-echo Flashing error!!
+echo.
+echo Flashing error!!, press key to try again
+pause > nul
+goto FLASH
 pause
 :EXIT
 @echo on
