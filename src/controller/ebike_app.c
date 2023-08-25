@@ -455,24 +455,24 @@ static void ebike_control_motor(void);
 static void check_system(void);
 static void check_brakes(void);
 
-static void apply_power_assist();
-static void apply_torque_assist();
-static void apply_cadence_assist();
-static void apply_emtb_assist();
-static void apply_hybrid_assist();
-static void apply_cruise();
-static void apply_walk_assist();
-static void apply_throttle();
-static void apply_temperature_limiting();
-static void apply_speed_limit();
+static void apply_power_assist(void);
+static void apply_torque_assist(void);
+static void apply_cadence_assist(void);
+static void apply_emtb_assist(void);
+static void apply_hybrid_assist(void);
+static void apply_cruise(void);
+static void apply_walk_assist(void);
+static void apply_throttle(void);
+static void apply_temperature_limiting(void);
+static void apply_speed_limit(void);
 
 // functions for oem display
-static void calc_oem_wheel_speed();
-static void apply_torque_sensor_calibration();
+static void calc_oem_wheel_speed(void);
+static void apply_torque_sensor_calibration(void);
 
 // battery soc percentage x10 calculation
-static void check_battery_soc();
-uint16_t read_battery_soc();
+static void check_battery_soc(void);
+uint16_t read_battery_soc(void);
 uint16_t calc_battery_soc_x10(uint16_t ui16_battery_soc_offset_x10, uint16_t ui16_battery_soc_step_x10, uint16_t ui16_cell_volts_max_x100, uint16_t ui16_cell_volts_min_x100);
 
 
@@ -734,7 +734,7 @@ static void ebike_control_motor(void)
 }
 
 
-static void apply_power_assist()
+static void apply_power_assist(void)
 {
 	uint8_t ui8_tmp;
     uint8_t ui8_power_assist_multiplier_x50 = ui8_riding_mode_parameter;
@@ -836,7 +836,7 @@ static void apply_power_assist()
 }
 
 
-static void apply_torque_assist()
+static void apply_torque_assist(void)
 {
 	uint8_t ui8_tmp;
 	
@@ -919,7 +919,7 @@ static void apply_torque_assist()
 }
 
 
-static void apply_cadence_assist()
+static void apply_cadence_assist(void)
 {
 	uint8_t ui8_tmp;
 	
@@ -974,7 +974,7 @@ static void apply_cadence_assist()
 }
 
 
-static void apply_emtb_assist()
+static void apply_emtb_assist(void)
 {
 //#define eMTB_ASSIST_ADC_TORQUE_OFFSET    10
 #define eMTB_ASSIST_ADC_TORQUE_OFFSET    5
@@ -1084,7 +1084,7 @@ static void apply_emtb_assist()
 }
 
 
-static void apply_walk_assist()
+static void apply_walk_assist(void)
 {
 	if(m_configuration_variables.ui8_assist_with_error_enabled) {
 		// get walk assist duty cycle target
@@ -1201,7 +1201,7 @@ static void apply_walk_assist()
 }
 
 
-static void apply_cruise()
+static void apply_cruise(void)
 {
 //#define CRUISE_PID_KP                             14    // 48 volt motor: 12, 36 volt motor: 14
 //#define CRUISE_PID_KI                             0.7   // 48 volt motor: 1, 36 volt motor: 0.7
@@ -1352,7 +1352,7 @@ static void apply_cruise()
 }
 
 
-static void apply_hybrid_assist()
+static void apply_hybrid_assist(void)
 {
 	uint8_t ui8_tmp;
 	uint16_t ui16_adc_battery_current_target_power_assist;
@@ -1455,7 +1455,7 @@ static void apply_hybrid_assist()
 }
 
 
-static void apply_torque_sensor_calibration()
+static void apply_torque_sensor_calibration(void)
 {
 #define PEDAL_TORQUE_ADC_STEP_MIN_VALUE		160 // 20 << 3
 #define PEDAL_TORQUE_ADC_STEP_MAX_VALUE		720 // 90 << 3
@@ -1487,7 +1487,7 @@ static void apply_torque_sensor_calibration()
 }
 
 
-static void apply_throttle()
+static void apply_throttle(void)
 {
     // map adc value from 0 to 255
     ui8_throttle_adc = map_ui8((uint8_t) UI8_ADC_THROTTLE,
@@ -1535,7 +1535,7 @@ static void apply_throttle()
 }
 
 
-static void apply_temperature_limiting()
+static void apply_temperature_limiting(void)
 {
     // get ADC measurement
     uint16_t ui16_temp = UI16_ADC_10_BIT_THROTTLE;
@@ -1560,7 +1560,7 @@ static void apply_temperature_limiting()
 }
 
 
-static void apply_speed_limit()
+static void apply_speed_limit(void)
 {
     if (m_configuration_variables.ui8_wheel_speed_max > 0) {
         // set battery current target
@@ -1778,7 +1778,7 @@ struct_configuration_variables* get_configuration_variables(void)
 }
 
 
-static void check_brakes()
+static void check_brakes(void)
 {
     if (ui8_brake_state)
         ui8_brakes_engaged = 1;
@@ -1787,7 +1787,7 @@ static void check_brakes()
 }
 
 
-static void check_system()
+static void check_system(void)
 {
 // E08 ERROR_SPEED_SENSOR
 #define CHECK_SPEED_SENSOR_COUNTER_THRESHOLD          500 // 500 * 25ms = 12.5 seconds
@@ -3559,7 +3559,7 @@ static void check_battery_soc(void)
 
 
 // read battery percentage x10 (actual charge)
-uint16_t read_battery_soc()
+uint16_t read_battery_soc(void)
 {
 	uint16_t ui16_battery_SOC_calc_x10 = 0;
 	
