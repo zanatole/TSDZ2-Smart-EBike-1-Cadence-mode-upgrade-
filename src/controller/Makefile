@@ -106,10 +106,9 @@ backup:
 	stm8flash -c stlinkv2 -p stm8s105?6 -s eeprom -r $(ODIR)/TSDZ_orig_eeprom.bin
 
 flash:
-	stm8flash -c stlinkv2 -p stm8s105?6 -w $(ODIR)/$(PNAME).ihx
-
+	stm8flash -c stlinkv2 -p stm8s105\?6 -w $(ODIR)/$(PNAME).ihx
 clear_eeprom:
-	stm8flash -c stlinkv2 -p stm8s105?6 -s eeprom -w data_empty.ihx
+	stm8flash -c stlinkv2 -p stm8s105\?6 -s eeprom -w data_empty.ihx
 
 
 clean:
