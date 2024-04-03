@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-version="20.1C.2-2"
+version="20.1C.2-3"
 settings_date=$1
 
 release_folder=$(pwd)/releases
@@ -20,8 +20,8 @@ make all
 # Save new firmware
 echo Copying firmware to release folder.
 echo $release_folder/TSDZ2-$version-$settings_date.hex
-mkdir -p $release_folder
-yes | cp -rf ../../bin/main.ihx $release_folder/TSDZ2-$version-$settings_date.hex
+mkdir -p "$release_folder"
+yes | cp -rf ../../bin/main.ihx "$release_folder/TSDZ2-$version-$settings_date.hex"
 
 backup=no
 while true; do

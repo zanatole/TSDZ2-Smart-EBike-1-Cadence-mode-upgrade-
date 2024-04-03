@@ -1,6 +1,12 @@
 TSDZ2 Open Source Firmware
 for stock displays XH18 - VLCD5 - VLCD6
 
+List of changes v20.1C.2 update 3
+  1 - Fix Makefile clear_eeprom with -s eeprom (by @apolselli)
+  2 - Fix compiler warning for missing void in function prototypes (by @chgpalmer)
+  3 - Improved building (by @dzid26)
+  4 - Irq uart priority level set
+
 List of changes v20.1C.2 update 2
   1 - Improved Walk assist speed adjustment.
   2 - Added legal throttle, only works when pedaling, in street mode.
@@ -11,6 +17,8 @@ List of changes v20.1C.2 update 2
   7 - Fixed comms error detection (by lcha78).
   8 - Added manuals in Spanish (by ashrambo).
   9 - Building script improvements (by dzid26)
+ 10 - Compile and flash automatically from Linux and Mac OS (by IArchi)
+ 11 - VLCD6, fixed SOC display at power on
 
 List of changes v20.1C.2 update 1
   1 - Fixed "Startup assist" feature.
