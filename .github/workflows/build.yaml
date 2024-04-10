@@ -25,11 +25,14 @@ jobs:
       run: | #install silent and then unpack missing installation libraries
         Invoke-WebRequest https://netix.dl.sourceforge.net/project/sdcc/sdcc-win64/$env:SDCC_VERSION/sdcc-$env:SDCC_VERSION-rc3-x64-setup.exe -OutFile sdcc_setup.exe
         Start-Process -wait -FilePath "sdcc_setup.exe" -ArgumentList "/S", "/D=C:\Program Files\SDCC"
+        echo "Adding sdcc to PATH"
+        Add-Content $env:GITHUB_PATH "C:\Program Files\SDCC\bin"
     - uses: actions/checkout@v2
     - name: Build
       run: |
         cd src/controller
-        ./compile.bat
+        ../../tools/cygwin/bin/make.exe clean
+        ../../tools/cygwin/bin/make.exe CFLAGS=--Werror
     - uses: actions/upload-artifact@v3
       with:
         name: firmware
@@ -53,7 +56,7 @@ jobs:
         run: |
           cd src/controller
           make clean
-          make
+          make CFLAGS=--Werror
       - uses: actions/upload-artifact@v3
         with:
           name: firmware
