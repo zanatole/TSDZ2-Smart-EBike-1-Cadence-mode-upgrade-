@@ -7,7 +7,6 @@
  */
 
 #include <stdint.h>
-#include <stdio.h>
 #include <math.h>
 #include "motor.h"
 #include "interrupts.h"
