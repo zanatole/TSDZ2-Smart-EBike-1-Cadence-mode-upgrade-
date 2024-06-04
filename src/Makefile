@@ -79,7 +79,8 @@ $(PNAME): $(MAINSRC) $(RELS)
 	$(CC) $(INCLUDES) $(CFLAGS) $(DEBUG_FLAGS) $(LIBS) $(MAINSRC) $(RELS) -o$(ODIR)/$(PNAME).elf
 
 # 	$(SIZE) $(PNAME).elf	
-	$(OBJCOPY) -g $(ODIR)/$(PNAME).elf -O ihex $(ODIR)/$(PNAME).ihx $(ELF_SECTIONS_TO_REMOVE)
+	$(OBJCOPY) -g $(ODIR)/$(PNAME).elf -O ihex $(ODIR)/$(PNAME).hex $(ELF_SECTIONS_TO_REMOVE)
+	cp $(ODIR)/$(PNAME).hex $(ODIR)/../$(PNAME).hex
 
 #Rules for firmware sources
 %.rel: %.c $(HEADERS)
@@ -96,7 +97,7 @@ $(ODIR)/%.rel: $(SDIR)/%.c
 .SUFFIXES: .c .rel
 
 bin:
-	$(OBJCOPY) -I ihex $(ODIR)/$(PNAME).ihx -O binary $(ODIR)/$(PNAME).bin
+	$(OBJCOPY) -I ihex $(ODIR)/$(PNAME).hex -O binary $(ODIR)/$(PNAME).bin
 
 backup:
 	stm8flash -c stlinkv2 -p stm8s105?6 -s opt -r $(ODIR)/TSDZ_orig_opt.bin
@@ -104,10 +105,10 @@ backup:
 	stm8flash -c stlinkv2 -p stm8s105?6 -s eeprom -r $(ODIR)/TSDZ_orig_eeprom.bin
 
 flash:
-	stm8flash -c stlinkv2 -p stm8s105\?6 -w $(ODIR)/$(PNAME).ihx
-clear_eeprom:
-	stm8flash -c stlinkv2 -p stm8s105\?6 -s eeprom -w data_empty.ihx
+	stm8flash -c stlinkv2 -p stm8s105\?6 -w $(ODIR)/$(PNAME).hex
 
+clear_eeprom:
+	stm8flash -c stlinkv2 -p stm8s105\?6 -s eeprom -w data_empty.hex
 
 clean:
 	@echo "Cleaning files..."

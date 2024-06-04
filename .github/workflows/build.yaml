@@ -37,7 +37,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: firmware_from_windows
-        path: bin/main.ihx
+        path: bin/main.hex
 
 
   Build_Linux:
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: firmware_from_linux
-          path: bin/main.ihx
+          path: bin/main.hex
 
 
   Compare_builds:
@@ -83,5 +83,5 @@ jobs:
         run: |
           ls
           echo "Comparing build files"
-          git diff  firmware_from_windows/main.ihx firmware_from_linux/main.ihx --word-diff=color --ignore-space-at-eol --exit-code
+          git diff  firmware_from_windows/main.hex firmware_from_linux/main.hex --word-diff=color --ignore-space-at-eol --exit-code
           echo "Done comparing build files. Files are the same."
