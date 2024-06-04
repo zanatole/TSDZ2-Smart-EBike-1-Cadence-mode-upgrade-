@@ -45,6 +45,9 @@ This project is being developed and maintained for free by a community of users.
 1. Clone this repository
 2. Install the SDCC compiler
 
+## Debugging
+- You can use [STMStdudio](https://www.st.com/en/development-tools/stm-studio-stm8.html) to plot global variables in real-time
+
 ### Compile the firmware
 `cd src/` and use `make` or `compile.bat` to compile the firmware.
 
