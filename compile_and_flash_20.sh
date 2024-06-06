@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-version="20.1C.2-3"
+version="20.1C.6-0"
 settings_date=$1
 
 release_folder=$(pwd)/releases
 backup_folder=$(pwd)/releases/backup
 
-cd src/controller
+cd src
 
 # Clean existing
 rm -rf main.ihx || true
@@ -21,7 +21,7 @@ make all
 echo Copying firmware to release folder.
 echo $release_folder/TSDZ2-$version-$settings_date.hex
 mkdir -p "$release_folder"
-yes | cp -rf ../../bin/main.ihx "$release_folder/TSDZ2-$version-$settings_date.hex"
+yes | cp -rf ../bin/main.ihx "$release_folder/TSDZ2-$version-$settings_date.hex"
 
 backup=no
 while true; do
@@ -38,9 +38,9 @@ if [ "$backup" = "yes" ]; then
 	echo Backup current firmware to $backup_folder/TSDZ_orig_opt-$version-$settings_date.bin
 	mkdir -p $backup_folder
 	make backup
-	yes | cp -rf ../../bin/TSDZ_orig_opt.bin $backup_folder/TSDZ_orig_opt-$version-$settings_date.bin
-	yes | cp -rf ../../bin/TSDZ_orig.bin $backup_folder/TSDZ_orig-$version-$settings_date.bin
-	yes | cp -rf ../../bin/TSDZ_orig_eeprom.bin $backup_folder/TSDZ_orig_eeprom-$version-$settings_date.bin
+	yes | cp -rf ../bin/TSDZ_orig_opt.bin $backup_folder/TSDZ_orig_opt-$version-$settings_date.bin
+	yes | cp -rf ../bin/TSDZ_orig.bin $backup_folder/TSDZ_orig-$version-$settings_date.bin
+	yes | cp -rf ../bin/TSDZ_orig_eeprom.bin $backup_folder/TSDZ_orig_eeprom-$version-$settings_date.bin
 fi
 
 flash=yes

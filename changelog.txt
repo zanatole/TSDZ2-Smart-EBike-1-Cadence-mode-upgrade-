@@ -1,6 +1,27 @@
 TSDZ2 Open Source Firmware
 for stock displays XH18 - VLCD5 - VLCD6
 
+List of changes v20.1C.6-beta-0
+  1 - Updated to v15 version of mspider65 (optimized FOC angle calculation)
+  2 - Added "Smooth start" feature for Hybrid, Torque and Cadence mode.
+  3 - Progressive assist in eMtb mode, based on torque or power.
+  4 - Levels set the current target in Cadence Assist mode.
+  5 - Optimized PID parameters in Cruise mode.
+  6 - Enabling Coaster Brake disables Walk Assist, Startup Assist, Throttle, Cruise (safety).
+  7 - Startup assist. Added speed limit to 6 km/h.
+  8 - Choice of temperature sensor, LM35 or TMP36.
+  9 - Choice of brake input, brake sensors or on/off thermostat (NO max 85°C).
+ 10 - Choice of throttle use mode.
+ 11 - Convert mph and miles to VLCD6, or alternative for other displays.
+ 12 - Added motor overcurrent check (by mspider65), E07 overcurrent error.
+ 13 - Added throttle input check on power up, E05 throttle fault.
+ 14 - Fixed walk assist debounce time issue.
+ 15 - Fixed torque sensor calibration problem with weight.
+ 16 - Improved field weakening feature.
+ 17 - For 32-bit Windows, auto switching to the 32-bit Cygwin folder.
+ 18 - Added terminal for Compiling&Flash output in Linux (xterm required).
+ 19 - Developer tools (by @dzid26).
+
 List of changes v20.1C.2 update 3
   1 - Fix Makefile clear_eeprom with -s eeprom (by @apolselli)
   2 - Fix compiler warning for missing void in function prototypes (by @chgpalmer)
