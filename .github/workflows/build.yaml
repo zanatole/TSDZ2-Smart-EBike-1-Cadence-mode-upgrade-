@@ -32,8 +32,8 @@ jobs:
     - name: Build
       run: |
         cd src
-        ../tools/cygwin/bin_64/make.exe clean
-        ../tools/cygwin/bin_64/make.exe CFLAGS=--Werror
+        ../tools/cygwin_64/bin/make.exe clean
+        ../tools/cygwin_64/bin/make.exe CFLAGS=--Werror
     - uses: actions/upload-artifact@v4
       with:
         name: firmware_from_windows
