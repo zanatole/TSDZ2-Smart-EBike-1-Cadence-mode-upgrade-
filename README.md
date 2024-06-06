@@ -27,7 +27,7 @@ This project is being developed and maintained for free by a community of users.
 - Install [ST Visual Development](http://www.st.com/en/development-tools/stvd-stm8.html).
 - Install [Java](https://www.java.com/endownload/).
 - Open JavaConfigurator.jar customize the parameters and click Compile & Flash
-- Or use supplied .bat scripts, e.g. `src/controller/compile_and_flash.bat` 
+- Or use supplied .bat scripts, e.g. `src/compile_and_flash.bat` 
 - With 32-bit Windows systems, replace the files in the \tools\cygwin\bin folder with those in the bin_32.zip file
 
 ### Linux and MacOS
@@ -46,7 +46,7 @@ This project is being developed and maintained for free by a community of users.
 2. Install the SDCC compiler
 
 ### Compile the firmware
-`cd src/controller/` and use `make` or `compile.bat` to compile the firmware.
+`cd src/` and use `make` or `compile.bat` to compile the firmware.
 
 ### Editing environment
 1. VScode can be used for the development.
