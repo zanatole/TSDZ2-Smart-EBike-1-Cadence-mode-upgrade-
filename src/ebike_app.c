@@ -73,7 +73,6 @@ volatile uint8_t ui8_motor_enabled = 1;
 static uint8_t ui8_assist_without_pedal_rotation_threshold = ASSISTANCE_WITHOUT_PEDAL_ROTATION_THRESHOLD;
 static uint8_t ui8_lights_state = 0;
 static uint8_t ui8_lights_button_flag = 0;
-static uint8_t ui8_field_weakening_feature_enabled = 0;
 static uint8_t ui8_field_weakening_erps_delta = 0;
 static uint8_t ui8_optional_ADC_function = OPTIONAL_ADC_FUNCTION;
 static uint8_t ui8_walk_assist_level = 0;
@@ -185,7 +184,6 @@ static uint8_t ui8_startup_boost_enabled_temp = STARTUP_BOOST_ON_STARTUP;
 static uint16_t ui16_startup_boost_factor_array[120];
 
 // smooth start
-static uint8_t ui8_smooth_start_enabled = SMOOTH_START_ENABLED;
 static uint8_t ui8_smooth_start_flag = 0;
 static uint8_t ui8_smooth_start_counter = 0;
 static uint8_t ui8_smooth_start_counter_set = 0;
@@ -482,7 +480,8 @@ static void ebike_control_motor(void)
 	// field weakening enabled
 	#if FIELD_WEAKENING_ENABLED
 	if ((ui16_motor_speed_erps > MOTOR_SPEED_FIELD_WEAKENING_MIN)
-		&& (ui8_adc_battery_current_filtered < ui8_controller_adc_battery_current_target)) {
+		&& (ui8_adc_battery_current_filtered < ui8_controller_adc_battery_current_target)
+		&& (!ui8_adc_throttle_assist)) {
 			ui8_field_weakening_erps_delta = ui16_motor_speed_erps - MOTOR_SPEED_FIELD_WEAKENING_MIN;
 			ui8_fw_hall_counter_offset_max = ui8_field_weakening_erps_delta >> 5;
 			if (ui8_fw_hall_counter_offset_max > FW_HALL_COUNTER_OFFSET_MAX) {
@@ -782,9 +781,9 @@ static void apply_power_assist(void)
 static void apply_torque_assist(void)
 {
 	// smooth start
-	if (ui8_smooth_start_enabled) {
-		apply_smooth_start();
-	}
+	#if SMOOTH_START_ENABLED
+	apply_smooth_start();
+	#endif
 	
 	// check for assist without pedal rotation when there is no pedal rotation
 	if (m_configuration_variables.ui8_assist_without_pedal_rotation_enabled) {
@@ -960,9 +959,9 @@ static void apply_hybrid_assist(void)
 	uint16_t ui16_adc_battery_current_target;
 	
 	// smooth start
-	if (ui8_smooth_start_enabled) {
-		apply_smooth_start();
-	}
+	#if SMOOTH_START_ENABLED
+	apply_smooth_start();
+	#endif
 	
 	// check for assist without pedal rotation when there is no pedal rotation
 	if (m_configuration_variables.ui8_assist_without_pedal_rotation_enabled) {
@@ -2807,10 +2806,9 @@ static void uart_receive_package(void)
 				||(ui8_startup_assist_flag)) {
 				m_configuration_variables.ui8_wheel_speed_max = WALK_ASSIST_THRESHOLD_SPEED;
 			}
-			else if (ui8_throttle_mode_array[m_configuration_variables.ui8_street_mode_enabled] == W_O_P_6KM_H_ONLY) {
-				if (ui8_throttle_adc_in) {
+			else if ((ui8_throttle_mode_array[m_configuration_variables.ui8_street_mode_enabled] == W_O_P_6KM_H_ONLY)
+				&& (ui8_throttle_adc_in)) {
 					m_configuration_variables.ui8_wheel_speed_max = WALK_ASSIST_THRESHOLD_SPEED;
-				}
 			}
 			else {
 				m_configuration_variables.ui8_wheel_speed_max = ui8_wheel_speed_max_array[m_configuration_variables.ui8_street_mode_enabled];
