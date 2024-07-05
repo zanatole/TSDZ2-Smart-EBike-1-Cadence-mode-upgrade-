@@ -537,7 +537,8 @@ static void ebike_control_motor(void)
     // reset control parameters if... (safety)
     if ((ui8_brake_state)
 	  ||(ui8_system_state == ERROR_MOTOR_BLOCKED)
-	  ||(ui8_system_state == ERROR_BATTERY_OVERCURRENT) // or ERROR_MOTOR_CHECK
+	  ||(ui8_system_state == ERROR_MOTOR_CHECK)
+	  ||(ui8_system_state == ERROR_BATTERY_OVERCURRENT)
 	  ||(ui8_battery_SOC_saved_flag)
 	  ||(!ui8_motor_enabled)
 	  ||(!ui8_assist_level)
@@ -589,7 +590,7 @@ static void ebike_control_motor(void)
 	
     // check if the motor should be enabled or disabled
     if (ui8_motor_enabled
-		&& ((ui8_system_state == ERROR_BATTERY_OVERCURRENT) // or ERROR_MOTOR_CHECK
+		&& ((ui8_system_state == ERROR_BATTERY_OVERCURRENT)
 			|| (ui8_battery_SOC_saved_flag)
 			|| ((ui16_motor_speed_erps == 0)
 				&& (!ui8_adc_battery_current_target)
@@ -1655,11 +1656,12 @@ struct_configuration_variables* get_configuration_variables(void)
 static void check_system(void)
 {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// E05 ERROR_MOTOR_CHECK (E03 blinking for XH18)
-// E05 shared with ERROR_BATTERY_OVERCURRENT
-#define MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD         	40  // 40 * 100ms = 4.0 seconds
+// E09 ERROR_MOTOR_CHECK (E08 blinking for XH18)
+// E09 shared with ERROR_WRITE_EEPROM
+#define MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD         	60  // 60 * 100ms = 6.0 seconds
+#define MOTOR_CHECK_ERPS_THRESHOLD                  	20 // 20 ERPS
 static uint8_t ui8_riding_torque_mode = 0;
-static uint8_t ui8_motor_check_time_goes_alone = MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD;
+static uint8_t ui8_motor_check_time_goes_alone = 0;
 	
 	// riding modes that use the torque sensor
 	if (((m_configuration_variables.ui8_riding_mode == POWER_ASSIST_MODE)
@@ -1673,18 +1675,17 @@ static uint8_t ui8_motor_check_time_goes_alone = MOTOR_CHECK_TIME_GOES_ALONE_TRE
 		ui8_riding_torque_mode = 0;
 	}
 	// Check if the motor goes alone and with current or duty cycle target = 0 (safety)
-	if ((ui16_motor_speed_erps)
+	if ((ui16_motor_speed_erps > MOTOR_CHECK_ERPS_THRESHOLD)
 	  &&((ui8_riding_torque_mode)
 		||(m_configuration_variables.ui8_riding_mode == CADENCE_ASSIST_MODE))){
-			if ((!ui8_adc_battery_current_target || !ui8_duty_cycle_target)
-			  &&(ui8_motor_check_time_goes_alone)) {
-				ui8_motor_check_time_goes_alone--;
-			}	
+			if ((!ui8_adc_battery_current_target || !ui8_duty_cycle_target)) {
+				ui8_motor_check_time_goes_alone++;
+			}
 	}
 	else {
-		ui8_motor_check_time_goes_alone = MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD;
+		ui8_motor_check_time_goes_alone = 0;
 	}
-	if (!ui8_motor_check_time_goes_alone) {
+	if (ui8_motor_check_time_goes_alone > MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD) {
 		ui8_system_state = ERROR_MOTOR_CHECK;
 	}
 	

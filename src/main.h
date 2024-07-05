@@ -334,11 +334,10 @@ HALL_COUNTER_OFFSET_UP:    29 -> 44
 #define ERROR_MOTOR_BLOCKED                       	4 // E04
 #define ERROR_THROTTLE								5 // E05 (E03 blinking for XH18)
 #define ERROR_OVERTEMPERATURE						6 // E06
-#define ERROR_MOTOR_CHECK                       	7 // E07 shared (E04 blinking for XH18)
-#define ERROR_BATTERY_OVERCURRENT                 	7 // E07 shared (E04 blinking for XH18)
+#define ERROR_BATTERY_OVERCURRENT                 	7 // E07 (E04 blinking for XH18)
 #define ERROR_SPEED_SENSOR							8 // E08
-#define ERROR_WRITE_EEPROM  					  	9 // E09 (E08 blinking for XH18)
-
+#define ERROR_WRITE_EEPROM  					  	9 // E09 shared (E08 blinking for XH18)
+#define ERROR_MOTOR_CHECK                       	9 // E09 shared (E08 blinking for XH18)
 
 // optional ADC function
 #if ENABLE_TEMPERATURE_LIMIT && ENABLE_THROTTLE
