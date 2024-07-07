@@ -1658,7 +1658,7 @@ static void check_system(void)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // E09 ERROR_MOTOR_CHECK (E08 blinking for XH18)
 // E09 shared with ERROR_WRITE_EEPROM
-#define MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD         	60  // 60 * 100ms = 6.0 seconds
+#define MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD         	80 // 80 * 100ms = 8.0 seconds
 #define MOTOR_CHECK_ERPS_THRESHOLD                  	20 // 20 ERPS
 static uint8_t ui8_riding_torque_mode = 0;
 static uint8_t ui8_motor_check_time_goes_alone = 0;
