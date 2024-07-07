@@ -20,7 +20,9 @@ COPY ..\bin\main.hex "%backup_folder%\TSDZ2-%settings_date%.hex" >NUL 2>NUL
 echo Press any key to flash... (Ctl+C to stop)
 pause > nul
 CALL flash.bat
-echo press any key to close...
+@ECHO OFF
+echo.
+echo Press any key to close...
 pause > nul
 
 :EXIT
