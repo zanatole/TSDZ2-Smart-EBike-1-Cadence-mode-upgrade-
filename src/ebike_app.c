@@ -10,17 +10,14 @@
 #include <stdint.h>
 #include "stm8s.h"
 #include "stm8s_uart2.h"
-#include "stm8s_gpio.h"
 #include "main.h"
 #include "interrupts.h"
-#include "adc.h"
 #include "motor.h"
-#include "pwm.h"
 #include "uart.h"
-#include "brake.h"
 #include "eeprom.h"
 #include "lights.h"
 #include "common.h"
+#include "config.h"
 
 volatile struct_configuration_variables m_configuration_variables;
 
