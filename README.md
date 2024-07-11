@@ -75,6 +75,11 @@ Run tests:
 
 Any changes should have a corresponding unit test added, unless unfeasible.
 
+Calculate coverage and generate html report (probably will not work on Windows):
+`pytest --coverage`
+
+Tests with coverage are executed in the CI as well.
+
 ### Compile the firmware manually
 - `cd src/` and use `make` or `compile.bat` to compile the firmware.
 
