@@ -794,7 +794,7 @@ static void apply_torque_assist(void)
         uint8_t ui8_torque_assist_factor = ui8_riding_mode_parameter;
 
         // calculate torque assist target current
-        uint16_t ui16_adc_battery_current_target_torque_assist = ((uint16_t) ui16_adc_pedal_torque_delta
+        uint16_t ui16_adc_battery_current_target_torque_assist = (ui16_adc_pedal_torque_delta
                 * ui8_torque_assist_factor) / TORQUE_ASSIST_FACTOR_DENOMINATOR;
 
         // set motor acceleration / deceleration
@@ -969,7 +969,7 @@ static void apply_hybrid_assist(void)
 			uint8_t ui8_torque_assist_factor = ui8_riding_mode_parameter_array[TORQUE_ASSIST_MODE - 1][ui8_assist_level];
 		
 			// calculate torque assist target current
-			ui16_adc_battery_current_target_torque_assist = ((uint16_t) ui16_adc_pedal_torque_delta * ui8_torque_assist_factor) / TORQUE_ASSIST_FACTOR_DENOMINATOR;
+			ui16_adc_battery_current_target_torque_assist = (ui16_adc_pedal_torque_delta * ui8_torque_assist_factor) / TORQUE_ASSIST_FACTOR_DENOMINATOR;
 		}
 		else {
 			ui16_adc_battery_current_target_torque_assist = 0;
@@ -1425,7 +1425,7 @@ static void apply_temperature_limiting(void)
     }
 	else {
         // adjust target current if motor over temperature limit
-        ui8_adc_battery_current_target = map_ui16((uint16_t) ui16_motor_temperature_filtered_x10,
+        ui8_adc_battery_current_target = map_ui16(ui16_motor_temperature_filtered_x10,
 				(uint16_t) ((uint8_t)ui8_motor_temperature_min_value_to_limit_array[TEMPERATURE_SENSOR_TYPE] * (uint8_t)10U),
 				(uint16_t) ((uint8_t)ui8_motor_temperature_max_value_to_limit_array[TEMPERATURE_SENSOR_TYPE] * (uint8_t)10U),
 				ui8_adc_battery_current_target,
@@ -1438,7 +1438,7 @@ static void apply_speed_limit(void)
 {
     if (m_configuration_variables.ui8_wheel_speed_max) {
         // set battery current target
-        ui8_adc_battery_current_target = map_ui16((uint16_t) ui16_wheel_speed_x10,
+        ui8_adc_battery_current_target = map_ui16(ui16_wheel_speed_x10,
                 (uint16_t) (((uint8_t)(m_configuration_variables.ui8_wheel_speed_max) * (uint8_t)10U) - (uint8_t)20U),
                 (uint16_t) (((uint8_t)(m_configuration_variables.ui8_wheel_speed_max) * (uint8_t)10U) + (uint8_t)20U),
                 ui8_adc_battery_current_target,
@@ -3041,24 +3041,24 @@ static void uart_send_package(void)
 			// Data that can exceed this value is best always divided by 10.
 			if ((ui8_display_battery_soc)||((ui8_startup_counter < DELAY_MENU_ON)&&(ui8_assist_level == TURBO))) {
 				#if UNITS_TYPE == MILES
-				ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_SOC_percentage_x10 * 10;
+				ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10 * 10;
 				#else
-				ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
+				ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
 				#endif
 			}
 			else if ((ui8_display_data_on_startup)&&(ui8_startup_counter < DELAY_MENU_ON)&&(ui8_assist_level != TURBO)&&(ui8_menu_index == 0U)) {
 			  switch (ui8_display_data_on_startup) {
 				case 1:
 					#if UNITS_TYPE == MILES
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_SOC_percentage_x10 * 10;
+					ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10 * 10;
 					#else
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
+					ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
 					#endif
 				  break;
 				case 2:
 					// battery voltage calibrated x10 for display data
 					ui16_battery_voltage_calibrated_x10 = (ui16_battery_voltage_filtered_x10 * ACTUAL_BATTERY_VOLTAGE_PERCENT) / 100;
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_voltage_calibrated_x10;
+					ui16_display_data = ui16_display_data_factor / ui16_battery_voltage_calibrated_x10;
 				  break;
 				default:
 					ui16_display_data = 0;
@@ -3066,105 +3066,105 @@ static void uart_send_package(void)
 			  }
 			}
 			else if (ui8_torque_sensor_calibration_started) {
-				ui16_display_data = (uint16_t) ui16_display_data_factor / (ui16_pedal_weight_x100 / 10);
+				ui16_display_data = ui16_display_data_factor / (ui16_pedal_weight_x100 / 10);
 			}
 			else if (ui8_display_torque_sensor_step) {
-				ui16_display_data = (uint16_t) ui16_display_data_factor / (ui8_pedal_torque_per_10_bit_ADC_step_x100 * (uint8_t)10);
+				ui16_display_data = ui16_display_data_factor / (ui8_pedal_torque_per_10_bit_ADC_step_x100 * (uint8_t)10);
 			}
 			else if (ui8_display_torque_sensor_value) {
-				ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_adc_torque;
+				ui16_display_data = ui16_display_data_factor / ui16_adc_torque;
 			}
 			else if ((ui8_menu_counter <= ui8_delay_display_function)&&(ui8_menu_index)&&((ui8_assist_level < 2)||(ui8_display_alternative_lights_configuration))) { // OFF & ECO & alternative lights configuration
 			  uint8_t index_temp = (ui8_display_function_status[ui8_menu_index - 1][ui8_assist_level]);
 			  switch (index_temp) {
 				case 0:
-					ui16_display_data = (uint16_t) ui16_display_data_factor / FUNCTION_STATUS_OFF;
+					ui16_display_data = ui16_display_data_factor / FUNCTION_STATUS_OFF;
 				  break;
 				case 1:
-					ui16_display_data = (uint16_t) ui16_display_data_factor / FUNCTION_STATUS_ON;
+					ui16_display_data = ui16_display_data_factor / FUNCTION_STATUS_ON;
 				  break;
 				default:
 				  break;
 			  }
 			}
 			else if ((ui8_menu_counter <= ui8_delay_display_function)&&(ui8_menu_index)&&(ui8_assist_level == TURBO)) {
-				ui16_display_data = (uint16_t) ui16_display_data_factor / (ui8_display_lights_configuration * (uint8_t)100 + DISPLAY_STATUS_OFFSET);
+				ui16_display_data = ui16_display_data_factor / (ui8_display_lights_configuration * (uint8_t)100 + DISPLAY_STATUS_OFFSET);
 			}
 			else if ((ui8_menu_counter <= ui8_delay_display_function)&&(ui8_menu_index)) {
-				ui16_display_data = (uint16_t) ui16_display_data_factor / (ui8_display_riding_mode * (uint8_t)100 + DISPLAY_STATUS_OFFSET);
+				ui16_display_data = ui16_display_data_factor / (ui8_display_riding_mode * (uint8_t)100 + DISPLAY_STATUS_OFFSET);
 			}
 			else {
 			  switch (ui8_data_index_array[ui8_data_index]) {
 				case 0:
 					#if UNITS_TYPE == MILES
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_motor_temperature_filtered_x10 * 10;
+					ui16_display_data = ui16_display_data_factor / ui16_motor_temperature_filtered_x10 * 10;
 					#else
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_motor_temperature_filtered_x10;
+					ui16_display_data = ui16_display_data_factor / ui16_motor_temperature_filtered_x10;
 					#endif
 				  break;
 				case 1:
 					#if UNITS_TYPE == MILES
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_SOC_percentage_x10 * 10;
+					ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10 * 10;
 					#else
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
+					ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
 					#endif
 				  break;
 				case 2:
 					// battery voltage calibrated x10 for display data
 					ui16_battery_voltage_calibrated_x10 = (ui16_battery_voltage_filtered_x10 * ACTUAL_BATTERY_VOLTAGE_PERCENT) / 100;
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_battery_voltage_calibrated_x10;
+					ui16_display_data = ui16_display_data_factor / ui16_battery_voltage_calibrated_x10;
 				  break;
 				case 3:
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui8_battery_current_filtered_x10;
+					ui16_display_data = ui16_display_data_factor / ui8_battery_current_filtered_x10;
 				  break;
 				case 4:
 					// battery power filtered x 10 for display data
 					ui16_battery_power_filtered_x10 = filter(ui16_battery_power_x10, ui16_battery_power_filtered_x10, 8);
 					#if UNITS_TYPE == MILES
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui16_battery_power_filtered_x10);
+					ui16_display_data = ui16_display_data_factor / (ui16_battery_power_filtered_x10);
 					#else
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui16_battery_power_filtered_x10 / 10);
+					ui16_display_data = ui16_display_data_factor / (ui16_battery_power_filtered_x10 / 10);
 					#endif
 				  break;
 				case 5:
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui16_adc_throttle >> 2);
+					ui16_display_data = ui16_display_data_factor / (ui16_adc_throttle >> 2);
 				  break;
 				case 6:
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_adc_torque;
+					ui16_display_data = ui16_display_data_factor / ui16_adc_torque;
 				  break;
 				case 7:
 					#if UNITS_TYPE == MILES
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui8_pedal_cadence_RPM * (uint8_t)10);
+					ui16_display_data = ui16_display_data_factor / (ui8_pedal_cadence_RPM * (uint8_t)10);
 					#else
 					if (ui8_pedal_cadence_RPM > 99) {
-						ui16_display_data = (uint16_t) ui16_display_data_factor / ui8_pedal_cadence_RPM;
+						ui16_display_data = ui16_display_data_factor / ui8_pedal_cadence_RPM;
 					}
 					else {
-						ui16_display_data = (uint16_t) ui16_display_data_factor / (ui8_pedal_cadence_RPM * (uint8_t)10);
+						ui16_display_data = ui16_display_data_factor / (ui8_pedal_cadence_RPM * (uint8_t)10);
 					}
 					#endif
 				  break;
 				case 8:
 					// human power filtered x 10 for display data
 					ui16_human_power_filtered_x10 = filter(ui16_human_power_x10, ui16_human_power_filtered_x10, 8);
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui16_human_power_filtered_x10 / 10);
+					ui16_display_data = ui16_display_data_factor / (ui16_human_power_filtered_x10 / 10);
 				  break;
 				case 9:
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_adc_pedal_torque_delta;
+					ui16_display_data = ui16_display_data_factor / ui16_adc_pedal_torque_delta;
 				  break;
 				case 10:
 					#if UNITS_TYPE == MILES
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui32_wh_x10);
+					ui16_display_data = ui16_display_data_factor / (ui32_wh_x10);
 					#else
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui32_wh_x10 / 10);
+					ui16_display_data = ui16_display_data_factor / (ui32_wh_x10 / 10);
 					#endif
 				  break;
 				case 11:
-					ui16_display_data = (uint16_t) ui16_display_data_factor / ui16_motor_speed_erps;
+					ui16_display_data = ui16_display_data_factor / ui16_motor_speed_erps;
 				  break;
 				case 12:
 					ui16_duty_cycle_percent = (uint16_t) ((ui8_g_duty_cycle * (uint8_t)100) / PWM_DUTY_CYCLE_MAX) - 1;
-					ui16_display_data = (uint16_t) ui16_display_data_factor / (ui16_duty_cycle_percent * 10);
+					ui16_display_data = ui16_display_data_factor / (ui16_duty_cycle_percent * 10);
 				  break;
 				default:
 				  break;
@@ -3283,14 +3283,14 @@ static void calc_oem_wheel_speed(void)
 
 	// calc wheel speed  mm/0.1 sec
 	if (ui16_oem_wheel_speed_time > 0U) {
-		ui16_wheel_speed = (uint16_t)((ui16_display_data_factor / ui16_oem_wheel_speed_time) * ((uint16_t) 100 / 36));
+		ui16_wheel_speed = (uint16_t)((ui16_display_data_factor / ui16_oem_wheel_speed_time) * (100U / 36U));
 	}
 	else {
 		ui16_wheel_speed = 0;
 	}
 	// calc data speed  mm/0.1 sec
 	if (ui16_display_data) {
-		ui16_data_speed = (uint16_t)((ui16_display_data_factor / ui16_display_data) * ((uint16_t) 100 / 36));
+		ui16_data_speed = (uint16_t)((ui16_display_data_factor / ui16_display_data) * (100U / 36U));
 	}
 	else {
 		ui16_data_speed = 0;
