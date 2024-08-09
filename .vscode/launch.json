@@ -5,7 +5,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"preLaunchTask": "STM8 Build & Flash",
+			"preLaunchTask": "Build & Flash",
 			"postDebugTask": "OpenOCD reset target",
 			"name": "STM8-gdb",
 			"request": "launch",
