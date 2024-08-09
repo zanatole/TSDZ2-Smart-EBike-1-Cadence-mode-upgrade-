@@ -1444,15 +1444,20 @@ static void apply_temperature_limiting(void)
 }
 
 
-static void apply_speed_limit(void)
-{
-    if (m_configuration_variables.ui8_wheel_speed_max) {
-        // set battery current target
-        ui8_adc_battery_current_target = (uint8_t)map_ui16((uint16_t) ui16_wheel_speed_x10,
-                (uint16_t) (((uint8_t)(m_configuration_variables.ui8_wheel_speed_max) * (uint8_t)10U) - (uint8_t)20U),
-                (uint16_t) (((uint8_t)(m_configuration_variables.ui8_wheel_speed_max) * (uint8_t)10U) + (uint8_t)20U),
+static void apply_speed_limit(void) {
+    if (m_configuration_variables.ui8_wheel_speed_max > 0U) {
+		uint16_t speed_limit_low  = (uint16_t)((uint8_t)(m_configuration_variables.ui8_wheel_speed_max - 2U) * (uint8_t)10U); // casting literal to uint8_t ensures usage of MUL X,A
+		uint16_t speed_limit_high = (uint16_t)((uint8_t)(m_configuration_variables.ui8_wheel_speed_max + 2U) * (uint8_t)10U);
+
+        ui8_adc_battery_current_target = (uint8_t)map_ui16(ui16_wheel_speed_x10,
+                speed_limit_low,
+                speed_limit_high,
                 ui8_adc_battery_current_target,
-                0);
+                0U);
+		
+		if (ui16_wheel_speed_x10 > speed_limit_high) {
+			ui8_duty_cycle_target = 0;
+		}
     }
 }
 
@@ -1657,34 +1662,32 @@ static void check_system(void)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // E09 ERROR_MOTOR_CHECK (E08 blinking for XH18)
 // E09 shared with ERROR_WRITE_EEPROM
-#define MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD         	80 // 80 * 100ms = 8.0 seconds
+#define MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD         	60 // 60 * 100ms = 6.0 seconds
 #define MOTOR_CHECK_ERPS_THRESHOLD                  	20 // 20 ERPS
 static uint8_t ui8_riding_torque_mode = 0;
-static uint8_t ui8_motor_check_time_goes_alone = 0;
+static uint8_t ui8_motor_check_goes_alone_timer = 0U;
 	
 	// riding modes that use the torque sensor
 	if (((m_configuration_variables.ui8_riding_mode == POWER_ASSIST_MODE)
 	  ||(m_configuration_variables.ui8_riding_mode == TORQUE_ASSIST_MODE)
 	  ||(m_configuration_variables.ui8_riding_mode == HYBRID_ASSIST_MODE)
 	  ||(m_configuration_variables.ui8_riding_mode == eMTB_ASSIST_MODE))
-	  && (!ui8_adc_throttle_assist)) {
-		ui8_riding_torque_mode = 1;
+		&& (ui8_adc_throttle_assist == 0U)) {
+			ui8_riding_torque_mode = 1;
 	}
 	else {
 		ui8_riding_torque_mode = 0;
 	}
 	// Check if the motor goes alone and with current or duty cycle target = 0 (safety)
 	if ((ui16_motor_speed_erps > MOTOR_CHECK_ERPS_THRESHOLD)
-	  &&((ui8_riding_torque_mode)
-		||(m_configuration_variables.ui8_riding_mode == CADENCE_ASSIST_MODE))){
-			if ((!ui8_adc_battery_current_target || !ui8_duty_cycle_target)) {
-				ui8_motor_check_time_goes_alone++;
-			}
+		&&((ui8_riding_torque_mode) || (m_configuration_variables.ui8_riding_mode == CADENCE_ASSIST_MODE))
+		&& (ui8_adc_battery_current_target == 0U || ui8_duty_cycle_target == 0U)) {
+			ui8_motor_check_goes_alone_timer++;
 	}
 	else {
-		ui8_motor_check_time_goes_alone = 0;
+		ui8_motor_check_goes_alone_timer = 0;
 	}
-	if (ui8_motor_check_time_goes_alone > MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD) {
+	if (ui8_motor_check_goes_alone_timer > MOTOR_CHECK_TIME_GOES_ALONE_TRESHOLD) {
 		ui8_system_state = ERROR_MOTOR_CHECK;
 	}
 	
@@ -2976,6 +2979,7 @@ static void uart_send_package(void)
 		if ((ui8_display_fault_code != NO_FAULT)&&(ui8_display_function_code == NO_FUNCTION)) {
 			#if ENABLE_XH18
 			if (ui8_display_fault_code == ERROR_WRITE_EEPROM) {
+				// shared with ERROR_MOTOR_CHECK
 				// instead of E09, display blinking E08
 				if (ui8_default_flash_state) {
 					ui8_tx_buffer[5] = 8;
