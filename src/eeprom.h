@@ -50,4 +50,4 @@ void EEPROM_init(void);
 
 void EEPROM_controller(uint8_t ui8_operation, uint8_t ui8_byte_init);
 
-#endif /* _EEPROM_H_ */
+#endif /* EEPROM_H_ */

@@ -14,4 +14,4 @@
 void lights_init(void);
 void lights_set_state(uint8_t ui8_state);
 
-#endif /* _LIGHTS_H_ */
+#endif /* LIGHTS_H_ */

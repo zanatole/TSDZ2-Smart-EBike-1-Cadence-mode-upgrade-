@@ -15,5 +15,5 @@ int uart_put_char(int c);
 
 int uart_get_char(void);
 
-#endif /* _UART_H */
+#endif /* UART_H_ */
 

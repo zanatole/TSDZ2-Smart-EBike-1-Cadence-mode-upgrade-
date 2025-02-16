@@ -11,4 +11,4 @@
 
 void wheel_speed_sensor_init(void);
 
-#endif /* _WHELL_SPEED_SENSOR_H_ */
+#endif /* WHELL_SPEED_SENSOR_H_ */

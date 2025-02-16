@@ -11,4 +11,4 @@
 
 void pwm_init(void);
 
-#endif /* _PWM_H_ */
+#endif /* PWM_H_ */

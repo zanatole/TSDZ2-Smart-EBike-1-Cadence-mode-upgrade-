@@ -20,21 +20,10 @@
 #define HYBRID_ASSIST_MODE						  5
 #define CRUISE_MODE                               6
 #define WALK_ASSIST_MODE                          7
-#define TORQUE_SENSOR_CALIBRATION_MODE            8								   
-
-// error codes
-/*
-#define NO_ERROR                                  0
-#define ERROR_MOTOR_BLOCKED                       1
-#define ERROR_TORQUE_SENSOR                       2
-#define ERROR_BRAKE_APPLIED_DURING_POWER_ON       3
-#define ERROR_THROTTLE_APPLIED_DURING_POWER_ON    4
-#define ERROR_NO_SPEED_SENSOR_DETECTED            5
-#define ERROR_LOW_CONTROLLER_VOLTAGE              6   // controller works with no less than 15 V so give error code if voltage is too low
-*/										   
+#define TORQUE_SENSOR_CALIBRATION_MODE            8
 
 // walk assist
-//#define WALK_ASSIST_THRESHOLD_SPEED_X10           80  // 80 -> 8.0 kph, this is the maximum speed limit from which walk assist can be activated
+//#define WALK_ASSIST_THRESHOLD_SPEED_X10           70  // 70 -> 7.0 kph, this is the maximum speed limit from which walk assist can be activated
 
 // cruise
 //#define CRUISE_THRESHOLD_SPEED_X10                90  // 90 -> 9.0 kph, this is the minimum speed limit from which cruise can be activated
@@ -43,11 +32,6 @@
 #define NOT_IN_USE                                0
 #define TEMPERATURE_CONTROL                       1
 #define THROTTLE_CONTROL                          2
-
-// cadence sensor
-//#define STANDARD_MODE                             0
-//#define ADVANCED_MODE                             1
-//#define CALIBRATION_MODE                          2
 
 uint16_t map_ui16(uint16_t in, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
 uint8_t map_ui8(uint8_t in, uint8_t in_min, uint8_t in_max, uint8_t out_min, uint8_t out_max);

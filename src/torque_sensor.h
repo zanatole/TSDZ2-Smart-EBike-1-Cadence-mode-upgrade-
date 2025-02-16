@@ -11,4 +11,4 @@
 
 void torque_sensor_init(void);
 
-#endif /* _TORQUE_SENSOR_H_ */
+#endif /* TORQUE_SENSOR_H_ */

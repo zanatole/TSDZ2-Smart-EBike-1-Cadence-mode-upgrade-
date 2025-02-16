@@ -550,7 +550,7 @@ void TIM1_CAP_COM_IRQHandler(void) __interrupt(TIM1_CAP_COM_IRQHANDLER)
         */
 
             ld a, _ui8_temp+0     // ui8_svm_table_index is stored in ui8_temp
-            add a, #0x55        // ui8_temp = ui8_svm_table[(uint8_t) (ui8_svm_table_index + 85); /* 120deg */];
+            add a, #0x55        // ui8_temp = ui8_svm_table[(uint8_t) (ui8_svm_table_index + 85 /* 120deg */)];
             clrw x
             ld  xl, a
             ld  a, (_ui8_svm_table+0, x)
@@ -741,7 +741,7 @@ void TIM1_CAP_COM_IRQHandler(void) __interrupt(TIM1_CAP_COM_IRQHANDLER)
         jra 00052$
     00051$:
         clr _ui8_adc_motor_phase_current+0      // ui8_adc_motor_phase_current = 0;
-        clr _ui8_adc_foc_angle_current+0			// ui8_adc_foc_angle_current = 0;
+        clr _ui8_adc_foc_angle_current+0		// ui8_adc_foc_angle_current = 0;
 		tnz _ui8_foc_flag+0   // if (ui8_foc_flag)
         jreq 00052$
         // ui8_foc_angle_accumulated = ui8_foc_angle_accumulated - (ui8_foc_angle_accumulated >> 4);
@@ -864,7 +864,7 @@ void TIM1_CAP_COM_IRQHandler(void) __interrupt(TIM1_CAP_COM_IRQHANDLER)
 		else { ui16_wheel_speed_sensor_ticks_counter_min = WHEEL_SPEED_SENSOR_TICKS_COUNTER_MIN >> 3; }
 
 		if (!ui8_wheel_speed_sensor_ticks_counter_started ||
-		    (ui16_wheel_speed_sensor_ticks_counter > ui16_wheel_speed_sensor_ticks_counter_min)) { 
+		  (ui16_wheel_speed_sensor_ticks_counter > ui16_wheel_speed_sensor_ticks_counter_min)) { 
 			// check if wheel speed sensor pin state has changed
 			if (ui8_temp != ui8_wheel_speed_sensor_pin_state_old) {
 				// update old wheel speed sensor pin state
@@ -904,8 +904,7 @@ void TIM1_CAP_COM_IRQHandler(void) __interrupt(TIM1_CAP_COM_IRQHANDLER)
                 ui16_wheel_speed_sensor_ticks_counter = 0;
                 ui8_wheel_speed_sensor_ticks_counter_started = 0;
             }
-        }
-
+		}
 
         /****************************************************************************/
         /*

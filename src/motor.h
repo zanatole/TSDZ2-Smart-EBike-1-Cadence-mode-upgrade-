@@ -51,4 +51,4 @@ void hall_sensor_init(void); // must be called before using the motor
 void motor_enable_pwm(void);
 void motor_disable_pwm(void);
 
-#endif /* _MOTOR_H_ */
+#endif /* MOTOR_H_ */

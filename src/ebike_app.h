@@ -59,4 +59,4 @@ struct_configuration_variables* get_configuration_variables(void);
 
 void ebike_app_init(void);
 
-#endif /* _EBIKE_APP_H_ */
+#endif /* EBIKE_APP_H_ */

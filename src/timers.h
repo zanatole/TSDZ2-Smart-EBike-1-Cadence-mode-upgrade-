@@ -15,4 +15,4 @@ void timers_init(void);
 
 extern volatile uint8_t ui8_tim4_counter;
 
-#endif /* _TIMERS_H_ */
+#endif /* TIMERS_H_ */

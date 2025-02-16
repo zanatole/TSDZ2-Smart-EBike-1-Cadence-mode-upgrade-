@@ -7,12 +7,11 @@
  */
 
 #include <stdint.h>
-#include "main.h"
 #include "stm8s.h"
 #include "stm8s_flash.h"
+#include "main.h"
 #include "eeprom.h"
 #include "ebike_app.h"
-
 
 static const uint8_t ui8_default_array[EEPROM_BYTES_STORED] = 
 {

@@ -12,4 +12,4 @@
 void pas_init(void);
 void pas2_init(void);
 
-#endif /* _PAS_H_ */
+#endif /* PAS_H_ */

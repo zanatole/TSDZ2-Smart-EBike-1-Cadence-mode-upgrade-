@@ -24,4 +24,4 @@
 
 
 void adc_init(void);
-#endif /* _ADC_H */
+#endif /* ADC_H_ */

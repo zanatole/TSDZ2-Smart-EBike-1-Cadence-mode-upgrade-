@@ -1,5 +1,15 @@
-TSDZ2 Open Source Firmware
+TSDZ2 Open Source Firmware v20.1C.6
 for stock displays XH18 - VLCD5 - VLCD6
+
+List of changes v20.1C.6
+  1 - Added PWM frequency choice, 18kHz or 19kHz.
+  2 - Added overcurrent error delay (E07).
+  3 - Fixed bugs in SOC auto calculation.
+  4 - Increased motor blocked check time (E04).
+  5 - Increased minimum rpm for motor reactivation (by dzid26).
+  6 - All errors are reset only by turning the display off.
+  7 - Optimizations (by dzid26).
+  8 - Bleeding edge Unit Testing (by dzid26).
 
 List of changes v20.1C.6-beta-1
   1 - Moved ERROR MOTOR CHECK to E09, shared with ERROR WRITE EEPROM.

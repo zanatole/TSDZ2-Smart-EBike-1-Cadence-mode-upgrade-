@@ -12,4 +12,4 @@
 void brake_init (void);
 //BitStatus brake_is_set (void);
 
-#endif /* _BRAKE_H */
+#endif /* BRAKE_H */
