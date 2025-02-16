@@ -7,10 +7,9 @@
  */
 
 #include <stdint.h>
-
+#include <stdio.h>
+#include "uart.h"
 #include "stm8s.h"
-#include "stm8s_uart2.h"
-#include "main.h"
 #include "interrupts.h"
 
 

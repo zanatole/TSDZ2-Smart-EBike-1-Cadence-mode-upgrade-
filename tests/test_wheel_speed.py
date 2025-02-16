@@ -1,12 +1,12 @@
 import pytest
 from sim._tsdz2 import ffi, lib as ebike # module generated from c-code
 
-
 # Set up initial values before each test
 @pytest.fixture(autouse=True)
 def setup_ebike():
     # Set up initial values before each test
     ebike.m_configuration_variables.ui16_wheel_perimeter = 2070
+
     yield
     # Teardown after each test (optional)
     ebike.ui16_wheel_speed_sensor_ticks = 0
@@ -78,7 +78,6 @@ def test_wheel_speed_calculation_precision_parametrized(wheel_size):
     # pytest -s to print
     print(f"Biggest error: {max(error.values())}")
     print(f"Average error: {sum(error.values()) / len(error)}")
-
 
 # Run the tests
 if __name__ == '__main__':
