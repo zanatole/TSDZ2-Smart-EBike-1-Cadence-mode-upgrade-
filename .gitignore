@@ -12,7 +12,6 @@ tools/Java_Configurator_Source/
 *.ctu-info
 src/Result.log
 bin/
-experimental settings/
 releases/
 tests/sim/*
 !_tsdz2.cdef
