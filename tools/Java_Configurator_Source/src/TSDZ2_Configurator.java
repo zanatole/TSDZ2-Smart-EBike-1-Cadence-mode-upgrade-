@@ -1482,11 +1482,11 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 iWriter.println(RB_BOOST_AT_ZERO_SPEED.isSelected());
 
                 if (JCB_DISPLAY_TYPE.getSelectedIndex() == C850) {
-                    text_to_save = "#define ENABLEC850 1";
+                    text_to_save = "#define ENABLE_850C 1";
                     pWriter.println(text_to_save);
                 }
                 else {
-                    text_to_save = "#define ENABLEC850 0";
+                    text_to_save = "#define ENABLE_850C 0";
                     pWriter.println(text_to_save);
                 }
                 iWriter.println(boolDisplayType850C);
