@@ -824,6 +824,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                      mWriter = new PrintWriter(new BufferedWriter(new FileWriter(strTSDZ8files_to_flashDirName + File.separator + strTSDZ8configFileName)));
                      String text_to_save;
                      mWriter.println(":020000041000EA");
+                     mWriter.println(":02ff0000FF0000");
                      mWriter.println(mstrensHexLine(configMainVersion)); //00
                      mWriter.println(mstrensHexLine(configSubVersion));  //02
                      mWriter.println(mstrensHexLine(global_offset_angle)); //04
@@ -1283,7 +1284,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                      
                      mWriter.println(mstrensHexLine(Integer.parseInt(TF_OVERCURRENT_DELAY.getText()))); // 128 OVERCURRENT_DELAY
                      
-                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {
+                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {  // TIPO_MOTORE 12A
                         mWriter.println(mstrensHexLine(1));
                      }
                      else {
