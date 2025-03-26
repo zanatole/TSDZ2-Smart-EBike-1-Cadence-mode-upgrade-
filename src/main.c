@@ -99,20 +99,20 @@ int main(void) {
         // run every 25ms. Max measured ebike_app_controller() duration is 3,1 ms.
         if ((uint8_t)(ui8_1ms_counter - ui8_ebike_app_controller_counter) >= 25U) {
 
-            #ifdef TIME_DEBUG
+#ifdef TIME_DEBUG
             // incremented every 50us by PWM interrupt function
             ui8_main_time = 0;
-            #endif
+#endif
 
             ui8_ebike_app_controller_counter = ui8_1ms_counter;
             ebike_app_controller();
 
-            #ifdef TIME_DEBUG
+#ifdef TIME_DEBUG
             ui8_main_time = ui8_tim4_counter - ui8_main_time
             if (ui8_main_time > ui8_max_ebike_time) {
                 ui8_max_ebike_time = ui8_main_time;
 			}
-            #endif
+#endif
         }
     }
 }

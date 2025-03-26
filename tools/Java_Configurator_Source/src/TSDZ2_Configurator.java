@@ -18,27 +18,29 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
  */
 
 import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import javax.swing.ListSelectionModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JOptionPane;
-import javax.swing.JList;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+
+import java.text.SimpleDateFormat;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JOptionPane;
+import javax.swing.JList;
+import javax.swing.ListSelectionModel;
+import javax.swing.DefaultListModel;
+import javax.swing.UIManager;
+import javax.swing.Timer;
+
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
-import javax.swing.UIManager;
 
 @SuppressWarnings("all")
 
@@ -67,6 +69,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     JList experimentalSettingsList = new JList(experimentalSettingsFilesModel);
     JList provenSettingsList = new JList(provenSettingsFilesModel);
     
+    
     public class FileContainer {
 
 		public FileContainer(File file) {
@@ -83,6 +86,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             return file;
         }
     }
+    
     
     String[] displayDataArray = {"motor temperature", "battery SOC rem. %", "battery voltage", "battery current", "motor power", "adc throttle 8b", "adc torque sensor 10b", "pedal cadence rpm", "human power", "adc pedal torque delta", "consumed Wh", "motor ERPS", "duty cycle PWM %"};
     String[] lightModeArray = {"<br>lights ON", "<br>lights FLASHING", "lights ON and BRAKE-FLASHING brak.", "lights FLASHING and ON when braking", "lights FLASHING BRAKE-FLASHING brak.", "lights ON and ON always braking", "lights ON and BRAKE-FLASHING alw.br.", "lights FLASHING and ON always braking", "lights FLASHING BRAKE-FLASHING alw.br.", "assist without pedal rotation", "assist with sensors error", "field weakening"};
@@ -111,6 +115,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public int intTorqueAngleAdj;
     public int intThrottleMode;
     public int intThrottleModeOnStreetMode;
+    public int intAssistLevel5;
     
     String strFileSource;
     String strFileDest;
@@ -127,6 +132,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public boolean boolDisplayTypeVLCD6;
     public boolean boolDisplayTypeXH18;
     public boolean boolDisplayType850C;
+    public boolean boolDisplayTypeEKD01;
     public boolean boolAssistStartupPower;
     public boolean boolAssistStartupTorque;
     public boolean boolAssistStartupCadence;
@@ -159,6 +165,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public static final int VLCD6 = 1;
     public static final int XH18 = 2;
     public static final int C850 = 3;
+    public static final int EKD01 = 4;
+    public static final int BEFORE_ECO = 1;
+    public static final int AFTER_TURBO = 2;
     public static final int KILOMETERS = 0;
     public static final int MILES = 1;
     public static final int ALTERNATIVE_MILES = 2;
@@ -345,7 +354,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 CB_CRUISE_ENABLED.setSelected(Boolean.parseBoolean(in.readLine()));
                 intThrottleMode = Integer.parseInt(in.readLine());
                 intThrottleModeOnStreetMode = Integer.parseInt(in.readLine());
-                TF_ASS_LEVELS_1_OF_5.setText(in.readLine());
+                TF_ASS_LEVELS_5_PERCENT.setText(in.readLine());
                 boolAlternativeMiles = Boolean.parseBoolean(in.readLine());
             }
             else {
@@ -356,7 +365,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 TF_SMOOTH_START_RAMP.setText("35");
                 boolTemperatureSensorType = false;
                 CB_CRUISE_ENABLED.setSelected(true);
-                TF_ASS_LEVELS_1_OF_5.setText("60");
+                TF_ASS_LEVELS_5_PERCENT.setText("60");
                 boolAlternativeMiles = false;
                 
                 if (boolOptionalAdcThrottle) {
@@ -396,7 +405,17 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 boolMotorTypeTSDZ8 = Boolean.parseBoolean(strLine);
             }
             else {
-                 boolMotorTypeTSDZ8 = false;
+                boolMotorTypeTSDZ8 = false;
+            }
+            
+            strLine = in.readLine();
+            if (strLine != null) {
+                boolDisplayTypeEKD01 = Boolean.parseBoolean(strLine);
+                intAssistLevel5 = Integer.parseInt(in.readLine());
+            }
+            else {
+                boolDisplayTypeEKD01 = false;
+                intAssistLevel5 = DISABLED;
             }
             
             
@@ -482,6 +501,30 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 }
                 else if (boolDisplayType850C) {
                     JCB_DISPLAY_TYPE.setSelectedIndex(C850);
+                }
+                else if (boolDisplayTypeEKD01) {
+                    JCB_DISPLAY_TYPE.setSelectedIndex(EKD01);
+                }
+                
+                switch (intAssistLevel5) {
+                    case BEFORE_ECO:
+                        JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(BEFORE_ECO);
+                        if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                            TF_ASS_LEVELS_5_PERCENT.setText("60");
+                        }
+                        break;
+                    case AFTER_TURBO:
+                        JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(AFTER_TURBO);
+                        if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) < 100) {
+                            TF_ASS_LEVELS_5_PERCENT.setText("130");
+                        }
+                        break;
+                    default:
+                        JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(DISABLED);
+                        if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                            TF_ASS_LEVELS_5_PERCENT.setText("60");
+                        }
+                        break;
                 }
                 
                 if (boolStartupNone) {
@@ -680,7 +723,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public TSDZ2_Configurator() {
         initComponents();
         
-        this.setTitle("Parameter Configurator 5.2 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
+        this.setTitle("Parameter Configurator 5.3 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
         this.setLocationRelativeTo(null);
 
         // update lists
@@ -1266,7 +1309,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                      mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE.getSelectedIndex())))); // 11E THROTTLE_MODE
                      mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE_STREET.getSelectedIndex())))); // 120 STREET_MODE_THROTTLE_MODE
                      
-                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASS_LEVELS_1_OF_5.getText()))); // 122 ASSIST_LEVEL_1_OF_5_PERCENT
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText()))); // 122 ASSIST_LEVEL_5_PERCENT
                      
                      if ((JCB_UNITS_TYPE.getSelectedIndex() == ALTERNATIVE_MILES)||((JCB_UNITS_TYPE.getSelectedIndex() == MILES)&&(boolDisplayTypeVLCD6))) {
                          mWriter.println(mstrensHexLine(1)); // 124 ALTERNATIVE_MILES 1
@@ -1284,13 +1327,22 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                      
                      mWriter.println(mstrensHexLine(Integer.parseInt(TF_OVERCURRENT_DELAY.getText()))); // 128 OVERCURRENT_DELAY
                      
-                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {  // TIPO_MOTORE 12A
+                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {      // 12A MOTOR_Type
                         mWriter.println(mstrensHexLine(1));
                      }
                      else {
                         mWriter.println(mstrensHexLine(0));
                      }
                      
+                    if (JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01) {     // 12B ENABLE_EKD01
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                    else {
+                        mWriter.println(mstrensHexLine(0));
+                    }
+                    
+                    mWriter.println(mstrensHexLine(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()));     // 12C 0=DISABLED 1=BEFORE_ECO 2=AFTER_TURBO
+                    
                      mWriter.println(":00000001FF");   // End of hex file
                  } catch (IOException ioe) {
                          ioe.printStackTrace(System.err);
@@ -2072,7 +2124,15 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     pWriter.println(text_to_save);
                 }
                 iWriter.println(boolSocVolts);
-
+                
+                if (CB_ADC_STEP_ESTIM.isSelected()) {
+                    text_to_save = "#define TORQUE_SENSOR_ESTIMATED 1";
+                    pWriter.println(text_to_save);
+                }
+                else {
+                text_to_save = "#define TORQUE_SENSOR_ESTIMATED 0";
+                pWriter.println(text_to_save);
+                }
                 iWriter.println(CB_ADC_STEP_ESTIM.isSelected());
 
                 if (RB_BOOST_AT_ZERO_CADENCE.isSelected()) {
@@ -2173,8 +2233,8 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 iWriter.println(String.valueOf(JCB_THROTTLE_MODE_STREET.getSelectedIndex()));
                 pWriter.println(text_to_save);
                 
-                text_to_save = "#define ASSIST_LEVEL_1_OF_5_PERCENT " + TF_ASS_LEVELS_1_OF_5.getText();
-                iWriter.println(TF_ASS_LEVELS_1_OF_5.getText());
+                text_to_save = "#define ASSIST_LEVEL_5_PERCENT " + TF_ASS_LEVELS_5_PERCENT.getText();
+                iWriter.println(TF_ASS_LEVELS_5_PERCENT.getText());
                 pWriter.println(text_to_save);
                 
                 if ((JCB_UNITS_TYPE.getSelectedIndex() == ALTERNATIVE_MILES)||((JCB_UNITS_TYPE.getSelectedIndex() == MILES)&&(boolDisplayTypeVLCD6))) {
@@ -2212,7 +2272,33 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     pWriter.println(text_to_save);
                 }
                 iWriter.println(boolMotorTypeTSDZ8);
-
+                
+                if (JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01) {
+                    text_to_save = "#define ENABLE_EKD01 1";
+                    pWriter.println(text_to_save);
+                }
+                else {
+                    text_to_save = "#define ENABLE_EKD01 0";
+                    pWriter.println(text_to_save);
+                }
+                iWriter.println(boolDisplayTypeEKD01);
+                   
+                switch (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()) {
+                    case BEFORE_ECO:
+                        text_to_save = "#define ASSIST_LEVEL_5_MODE 1";
+                        pWriter.println(text_to_save);
+                        break;
+                    case AFTER_TURBO:
+                        text_to_save = "#define ASSIST_LEVEL_5_MODE 2";
+                        pWriter.println(text_to_save);
+                        break;
+                    default:
+                        text_to_save = "#define ASSIST_LEVEL_5_MODE 0";  // BEFORE_ECO
+                        pWriter.println(text_to_save);
+                        break;
+                }
+                iWriter.println(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex());
+                
                 pWriter.println("\r\n#endif /* CONFIG_H_ */");
 
                 iWriter.close();
@@ -2478,8 +2564,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_LIGHT_MODE_3 = new javax.swing.JTextField();
         jLabelLights3 = new javax.swing.JLabel();
         CB_LIGHTS = new javax.swing.JCheckBox();
-        jLabel67 = new javax.swing.JLabel();
-        TF_ASS_LEVELS_1_OF_5 = new javax.swing.JTextField();
         jPanel10 = new javax.swing.JPanel();
         jLabel17 = new javax.swing.JLabel();
         jLabelStreetSpeed = new javax.swing.JLabel();
@@ -2492,6 +2576,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         CB_STREET_MODE_ON_START = new javax.swing.JCheckBox();
         JCB_THROTTLE_MODE_STREET = new javax.swing.JComboBox<>();
         jLabel80 = new javax.swing.JLabel();
+        jLabel67 = new javax.swing.JLabel();
+        TF_ASS_LEVELS_5_PERCENT = new javax.swing.JTextField();
+        JCB_ASSIST_LEVEL_5_MODE = new javax.swing.JComboBox<>();
         jPanel8 = new javax.swing.JPanel();
         jPanel11 = new javax.swing.JPanel();
         jLabel35 = new javax.swing.JLabel();
@@ -2985,7 +3072,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         Label_Parameter5.setText("Units type");
         Label_Parameter5.setFocusable(false);
 
-        JCB_DISPLAY_TYPE.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "VLCD5", "VLCD6", "XH18", "850C" }));
+        JCB_DISPLAY_TYPE.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "VLCD5", "VLCD6", "XH18", "850C", "EKD01" }));
         JCB_DISPLAY_TYPE.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 JCB_DISPLAY_TYPEItemStateChanged(evt);
@@ -3967,7 +4054,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel74)
                     .addComponent(TF_CRUISE_SPEED_ENA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 14, Short.MAX_VALUE))
         );
 
         jLabel76.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
@@ -4028,12 +4115,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             }
         });
 
-        jLabel67.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        jLabel67.setText("Assist levels 1/5 (%ECO)");
-
-        TF_ASS_LEVELS_1_OF_5.setText("60");
-        TF_ASS_LEVELS_1_OF_5.setToolTipText("");
-
         javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
         jPanel17.setLayout(jPanel17Layout);
         jPanel17Layout.setHorizontalGroup(
@@ -4044,7 +4125,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     .addComponent(jLabel76, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel17Layout.createSequentialGroup()
                         .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel67, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabelLights3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                 .addComponent(jLabelLights1, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -4056,10 +4136,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                             .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(TF_LIGHT_MODE_1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(TF_LIGHT_MODE_2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(TF_ASS_LEVELS_1_OF_5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(TF_LIGHT_MODE_3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(TF_LIGHT_MODE_ON_START, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(12, 12, 12))))
+                        .addGap(10, 10, 10))))
         );
         jPanel17Layout.setVerticalGroup(
             jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -4083,11 +4162,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelLights3, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(TF_LIGHT_MODE_3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel67, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(TF_ASS_LEVELS_1_OF_5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         jLabel17.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
@@ -4190,6 +4265,30 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addContainerGap(38, Short.MAX_VALUE))
         );
 
+        jLabel67.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        jLabel67.setText("Assist level 5 (%)");
+
+        TF_ASS_LEVELS_5_PERCENT.setText("60");
+        TF_ASS_LEVELS_5_PERCENT.setToolTipText("<html>Assist level 5<br>\nIf assist level 5 mode is before ECO, must be less than 100%<br>\npercentage of assistance level of ECO<br>\n<br>\nIf assist level 5 mode is after TURBO, must be greater than 100%<br>\npercentage of assistance level of TURBO\n</html>");
+        TF_ASS_LEVELS_5_PERCENT.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                TF_ASS_LEVELS_5_PERCENTFocusLost(evt);
+            }
+        });
+        TF_ASS_LEVELS_5_PERCENT.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                TF_ASS_LEVELS_5_PERCENTKeyReleased(evt);
+            }
+        });
+
+        JCB_ASSIST_LEVEL_5_MODE.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "DISABLED", "BEFORE ECO", "AFTER TURBO" }));
+        JCB_ASSIST_LEVEL_5_MODE.setToolTipText("<html>Assist level 5<br>\nDISABLED, if not available<br>\nBEFORE ECO, if the fifth level is before ECO<br>\nAFTER TURBO, if the fifth level is after TURBO\n</html>");
+        JCB_ASSIST_LEVEL_5_MODE.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                JCB_ASSIST_LEVEL_5_MODEItemStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -4202,15 +4301,25 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(44, Short.MAX_VALUE))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPanel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap(44, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel67, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(5, 5, 5)
+                        .addComponent(JCB_ASSIST_LEVEL_5_MODE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(TF_ASS_LEVELS_5_PERCENT, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(50, 50, 50))))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -4224,14 +4333,20 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                             .addComponent(jPanel13, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel15, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(jPanel15, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(61, Short.MAX_VALUE))
+                        .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel67, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(JCB_ASSIST_LEVEL_5_MODE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(TF_ASS_LEVELS_5_PERCENT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(20, 67, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Assistance settings", jPanel4);
@@ -5668,6 +5783,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         boolDisplayTypeVLCD6 = false;
         boolDisplayTypeXH18 = false;
         boolDisplayType850C = false;
+        boolDisplayTypeEKD01 = false;
             
         switch (JCB_DISPLAY_TYPE.getSelectedIndex()) {
             case VLCD5:
@@ -5682,6 +5798,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             case C850:
                 boolDisplayType850C = true;
                 break;
+            case EKD01:
+                boolDisplayTypeEKD01 = true;
+                break;
             default:
                 break;
         }
@@ -5690,7 +5809,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             JCB_UNITS_TYPE.setSelectedIndex(ALTERNATIVE_MILES);
         }
         
-        if ((JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD5)||(JCB_DISPLAY_TYPE.getSelectedIndex() == C850)) {
+        if ((JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD5)||(JCB_DISPLAY_TYPE.getSelectedIndex() == C850)||(JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01)) {
             TF_BAT_CELL_5_6.setEnabled(true);
             TF_BAT_CELL_4_6.setEnabled(true);
             TF_BAT_CELL_3_6.setEnabled(true);
@@ -5858,7 +5977,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             JCB_UNITS_TYPE.setSelectedIndex(ALTERNATIVE_MILES);
         }
         
-        if ((JCB_UNITS_TYPE.getSelectedIndex() == KILOMETERS)) {
+        if (JCB_UNITS_TYPE.getSelectedIndex() == KILOMETERS) {
             jLabelMaxSpeed.setText("Max speed offroad mode (km/h)");
             jLabelStreetSpeed.setText("Street speed limit (km/h)");
             jLabelCruiseSpeedUnits.setText("km/h");
@@ -5949,6 +6068,41 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_formWindowOpened
 
+    private void JCB_ASSIST_LEVEL_5_MODEItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_JCB_ASSIST_LEVEL_5_MODEItemStateChanged
+        switch (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()) {
+            case BEFORE_ECO:
+                if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                    TF_ASS_LEVELS_5_PERCENT.setText("60");
+                }
+                intAssistLevel5 = BEFORE_ECO;
+                break;
+            case AFTER_TURBO:
+                if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) < 100) {
+                    TF_ASS_LEVELS_5_PERCENT.setText("130");
+                }
+                intAssistLevel5 = AFTER_TURBO;
+                break;
+            default:
+                break;
+        }
+    }//GEN-LAST:event_JCB_ASSIST_LEVEL_5_MODEItemStateChanged
+
+    private void TF_ASS_LEVELS_5_PERCENTFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_TF_ASS_LEVELS_5_PERCENTFocusLost
+        if (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex() == AFTER_TURBO) {
+            if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) < 100) {
+                TF_ASS_LEVELS_5_PERCENT.setText("130");
+            }
+        }
+    }//GEN-LAST:event_TF_ASS_LEVELS_5_PERCENTFocusLost
+
+    private void TF_ASS_LEVELS_5_PERCENTKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TF_ASS_LEVELS_5_PERCENTKeyReleased
+        if (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex() == BEFORE_ECO) {
+                if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                    TF_ASS_LEVELS_5_PERCENT.setText("60");
+                }
+        }
+    }//GEN-LAST:event_TF_ASS_LEVELS_5_PERCENTKeyReleased
+
     /*
      * @param args the command line arguments
      */
@@ -6010,6 +6164,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JCheckBox CB_TOR_SENSOR_ADV;
     private javax.swing.JCheckBox CB_WALK_ASSIST_ENABLED;
     private javax.swing.JCheckBox CB_WALK_TIME_ENA;
+    private javax.swing.JComboBox<String> JCB_ASSIST_LEVEL_5_MODE;
     private javax.swing.JComboBox<String> JCB_ASSIST_MODE_ON_STARTUP;
     private javax.swing.JComboBox<String> JCB_BRAKE_FEATURE;
     private javax.swing.JComboBox<String> JCB_DATA_ON_STARTUP;
@@ -6039,7 +6194,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JTextField TF_ADC_THROTTLE_MIN;
     private javax.swing.JTextField TF_ASSIST_THROTTLE_MAX;
     private javax.swing.JTextField TF_ASSIST_THROTTLE_MIN;
-    private javax.swing.JTextField TF_ASS_LEVELS_1_OF_5;
+    private javax.swing.JTextField TF_ASS_LEVELS_5_PERCENT;
     private javax.swing.JTextField TF_ASS_WITHOUT_PED_THRES;
     private javax.swing.JTextField TF_BATT_CAPACITY;
     private javax.swing.JTextField TF_BATT_CAPACITY_CAL;

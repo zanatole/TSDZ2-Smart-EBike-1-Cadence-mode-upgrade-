@@ -896,11 +896,12 @@
                 <Component class="javax.swing.JComboBox" name="JCB_DISPLAY_TYPE">
                   <Properties>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                      <StringArray count="4">
+                      <StringArray count="5">
                         <StringItem index="0" value="VLCD5"/>
                         <StringItem index="1" value="VLCD6"/>
                         <StringItem index="2" value="XH18"/>
                         <StringItem index="3" value="850C"/>
+                        <StringItem index="4" value="EKD01"/>
                       </StringArray>
                     </Property>
                   </Properties>
@@ -1351,17 +1352,30 @@
                           <Component id="jPanel10" max="32767" attributes="0"/>
                           <Component id="jPanel12" max="32767" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="27" max="32767" attributes="0"/>
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="jPanel13" max="32767" attributes="0"/>
-                          <Component id="jPanel16" max="32767" attributes="0"/>
-                      </Group>
-                      <EmptySpace pref="25" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jPanel17" min="-2" pref="216" max="-2" attributes="0"/>
-                          <Component id="jPanel14" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <EmptySpace pref="27" max="32767" attributes="0"/>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="jPanel13" max="32767" attributes="0"/>
+                                  <Component id="jPanel16" max="32767" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="25" max="32767" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jPanel17" min="-2" pref="216" max="-2" attributes="0"/>
+                                  <Component id="jPanel14" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="44" max="32767" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="1" attributes="0">
+                              <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jLabel67" min="-2" pref="109" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
+                              <Component id="JCB_ASSIST_LEVEL_5_MODE" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="TF_ASS_LEVELS_5_PERCENT" min="-2" pref="46" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="50" max="-2" attributes="0"/>
+                          </Group>
                       </Group>
-                      <EmptySpace pref="44" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -1370,7 +1384,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="1" max="-2" attributes="0">
                                   <Component id="jPanel12" alignment="0" max="32767" attributes="0"/>
                                   <Component id="jPanel9" alignment="0" max="32767" attributes="0"/>
@@ -1378,18 +1392,26 @@
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="jPanel16" max="32767" attributes="0"/>
                                   <Component id="jPanel10" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Component id="jPanel15" alignment="1" max="32767" attributes="0"/>
+                                  <Component id="jPanel16" alignment="0" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
-                          <Group type="102" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
                               <Component id="jPanel14" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Component id="jPanel17" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="jLabel67" alignment="3" min="-2" pref="24" max="-2" attributes="0"/>
+                                      <Component id="JCB_ASSIST_LEVEL_5_MODE" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Component id="TF_ASS_LEVELS_5_PERCENT" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
                           </Group>
                       </Group>
-                      <EmptySpace pref="61" max="32767" attributes="0"/>
+                      <EmptySpace min="20" pref="67" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -2229,7 +2251,7 @@
                               <Component id="jLabel74" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="TF_CRUISE_SPEED_ENA" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace min="0" pref="14" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -2366,7 +2388,6 @@
                               <Component id="jLabel76" alignment="0" max="32767" attributes="0"/>
                               <Group type="102" attributes="0">
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="jLabel67" max="32767" attributes="0"/>
                                       <Component id="jLabelLights3" max="32767" attributes="0"/>
                                       <Group type="103" alignment="0" groupAlignment="1" attributes="0">
                                           <Component id="jLabelLights1" min="-2" pref="152" max="-2" attributes="0"/>
@@ -2381,11 +2402,10 @@
                                           <Component id="TF_LIGHT_MODE_1" alignment="1" min="-2" pref="46" max="-2" attributes="0"/>
                                           <Component id="TF_LIGHT_MODE_2" alignment="1" min="-2" pref="46" max="-2" attributes="0"/>
                                       </Group>
-                                      <Component id="TF_ASS_LEVELS_1_OF_5" alignment="1" min="-2" pref="46" max="-2" attributes="0"/>
                                       <Component id="TF_LIGHT_MODE_3" alignment="1" min="-2" pref="46" max="-2" attributes="0"/>
                                       <Component id="TF_LIGHT_MODE_ON_START" alignment="0" min="-2" pref="46" max="-2" attributes="0"/>
                                   </Group>
-                                  <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                                  <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -2417,12 +2437,7 @@
                               <Component id="jLabelLights3" alignment="3" min="-2" pref="36" max="-2" attributes="0"/>
                               <Component id="TF_LIGHT_MODE_3" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel67" alignment="3" min="-2" pref="24" max="-2" attributes="0"/>
-                              <Component id="TF_ASS_LEVELS_1_OF_5" alignment="3" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <EmptySpace max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -2515,20 +2530,6 @@
                   <Events>
                     <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="CB_LIGHTSStateChanged"/>
                   </Events>
-                </Component>
-                <Component class="javax.swing.JLabel" name="jLabel67">
-                  <Properties>
-                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Tahoma" size="12" style="1"/>
-                    </Property>
-                    <Property name="text" type="java.lang.String" value="Assist levels 1/5 (%ECO)"/>
-                  </Properties>
-                </Component>
-                <Component class="javax.swing.JTextField" name="TF_ASS_LEVELS_1_OF_5">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="60"/>
-                    <Property name="toolTipText" type="java.lang.String" value=""/>
-                  </Properties>
                 </Component>
               </SubComponents>
             </Container>
@@ -2698,6 +2699,42 @@
                 </Component>
               </SubComponents>
             </Container>
+            <Component class="javax.swing.JLabel" name="jLabel67">
+              <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="12" style="1"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Assist level 5 (%)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="TF_ASS_LEVELS_5_PERCENT">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="60"/>
+                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Assist level 5&lt;br&gt;&#xa;If assist level 5 mode is before ECO, must be less than 100%&lt;br&gt;&#xa;percentage of assistance level of ECO&lt;br&gt;&#xa;&lt;br&gt;&#xa;If assist level 5 mode is after TURBO, must be greater than 100%&lt;br&gt;&#xa;percentage of assistance level of TURBO&#xa;&lt;/html&gt;"/>
+              </Properties>
+              <Events>
+                <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="TF_ASS_LEVELS_5_PERCENTFocusLost"/>
+                <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="TF_ASS_LEVELS_5_PERCENTKeyReleased"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JComboBox" name="JCB_ASSIST_LEVEL_5_MODE">
+              <Properties>
+                <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                  <StringArray count="3">
+                    <StringItem index="0" value="DISABLED"/>
+                    <StringItem index="1" value="BEFORE ECO"/>
+                    <StringItem index="2" value="AFTER TURBO"/>
+                  </StringArray>
+                </Property>
+                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Assist level 5&lt;br&gt;&#xa;DISABLED, if not available&lt;br&gt;&#xa;BEFORE ECO, if the fifth level is before ECO&lt;br&gt;&#xa;AFTER TURBO, if the fifth level is after TURBO&#xa;&lt;/html&gt;"/>
+              </Properties>
+              <Events>
+                <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="JCB_ASSIST_LEVEL_5_MODEItemStateChanged"/>
+              </Events>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+              </AuxValues>
+            </Component>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="jPanel8">
