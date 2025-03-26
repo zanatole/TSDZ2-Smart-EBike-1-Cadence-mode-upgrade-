@@ -1761,9 +1761,6 @@ static uint8_t ui8_motor_check_goes_alone_timer = 0U;
         if (ui8_motor_blocked_counter > MOTOR_BLOCKED_COUNTER_THRESHOLD_NEW) {
                 // set error code
                 ui8_system_state = ERROR_MOTOR_BLOCKED;
-
-                // reset motor blocked counter as the error code is set
-                ui8_motor_blocked_counter = 0;
             }
         }
 		else {
