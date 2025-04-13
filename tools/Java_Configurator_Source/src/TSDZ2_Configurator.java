@@ -18,30 +18,29 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
  */
 
 import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import javax.swing.ListSelectionModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import javax.swing.JOptionPane;
-import javax.swing.JList;
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+
+import java.text.SimpleDateFormat;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JOptionPane;
+import javax.swing.JList;
+import javax.swing.ListSelectionModel;
+import javax.swing.DefaultListModel;
+import javax.swing.UIManager;
+import javax.swing.Timer;
+
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
-import javax.swing.UIManager;
 
 @SuppressWarnings("all")
 
@@ -50,15 +49,26 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     /**
      * Creates new form TSDZ2_Configurator
      */
-
+    
     private File experimentalSettingsDir;
     private File provenSettingsDir;
     private File lastSettingsFile = null;
+    
+    // for TSDZ8 mstrens
+    private File TSDZ8file_to_flashDir;
+    String strTSDZ8files_to_flashDirName = "files_to_flash";
+    String strTSDZ8other_settingsDirName = "other settings";
+    String strTSDZ8configFileName = "TSDZ8_config.hex";
+    String strTSDZ8headerFileName = "TSDZ8_header.ini";
+    public static final int TSDZ8_INI_LINE_NUMBER = 10;
+    Integer[] intTSDZ8headerArray = new Integer[TSDZ8_INI_LINE_NUMBER]; // for TSDZ8 ini file
+    public boolean boolTSDZ8headerRead = true;
 
     DefaultListModel provenSettingsFilesModel = new DefaultListModel();
     DefaultListModel experimentalSettingsFilesModel = new DefaultListModel();
     JList experimentalSettingsList = new JList(experimentalSettingsFilesModel);
     JList provenSettingsList = new JList(provenSettingsFilesModel);
+    
     
     public class FileContainer {
 
@@ -76,7 +86,8 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             return file;
         }
     }
-
+    
+    
     String[] displayDataArray = {"motor temperature", "battery SOC rem. %", "battery voltage", "battery current", "motor power", "adc throttle 8b", "adc torque sensor 10b", "pedal cadence rpm", "human power", "adc pedal torque delta", "consumed Wh", "motor ERPS", "duty cycle PWM %"};
     String[] lightModeArray = {"<br>lights ON", "<br>lights FLASHING", "lights ON and BRAKE-FLASHING brak.", "lights FLASHING and ON when braking", "lights FLASHING BRAKE-FLASHING brak.", "lights ON and ON always braking", "lights ON and BRAKE-FLASHING alw.br.", "lights FLASHING and ON always braking", "lights FLASHING BRAKE-FLASHING alw.br.", "assist without pedal rotation", "assist with sensors error", "field weakening"};
 
@@ -104,6 +115,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public int intTorqueAngleAdj;
     public int intThrottleMode;
     public int intThrottleModeOnStreetMode;
+    public int intAssistLevel5;
     
     String strFileSource;
     String strFileDest;
@@ -111,11 +123,16 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     String strTorqueOffsetAdj;
     String strTorqueRangeAdj;
     String strTorqueAngleAdj;
+    String strLastCommit;
     
+    public boolean boolMotorTypeTSDZ2_48V;
+    public boolean boolMotorTypeTSDZ2_36V;
+    public boolean boolMotorTypeTSDZ8;
     public boolean boolDisplayTypeVLCD5;
     public boolean boolDisplayTypeVLCD6;
     public boolean boolDisplayTypeXH18;
     public boolean boolDisplayType850C;
+    public boolean boolDisplayTypeEKD01;
     public boolean boolAssistStartupPower;
     public boolean boolAssistStartupTorque;
     public boolean boolAssistStartupCadence;
@@ -141,10 +158,16 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public boolean boolUnitsMiles;
     public boolean boolAlternativeMiles;
     
+    public static final int TSDZ2_48V = 0;
+    public static final int TSDZ2_36V = 1;
+    public static final int TSDZ8 = 2;
     public static final int VLCD5 = 0;
     public static final int VLCD6 = 1;
     public static final int XH18 = 2;
     public static final int C850 = 3;
+    public static final int EKD01 = 4;
+    public static final int BEFORE_ECO = 1;
+    public static final int AFTER_TURBO = 2;
     public static final int KILOMETERS = 0;
     public static final int MILES = 1;
     public static final int ALTERNATIVE_MILES = 2;
@@ -179,8 +202,8 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public void loadSettings(File f) throws IOException {
 
         try (BufferedReader in = new BufferedReader(new FileReader(f))) {
-            RB_MOTOR_36V.setSelected(Boolean.parseBoolean(in.readLine()));
-            RB_MOTOR_48V.setSelected(Boolean.parseBoolean(in.readLine()));
+            boolMotorTypeTSDZ2_36V = Boolean.parseBoolean(in.readLine());
+            boolMotorTypeTSDZ2_48V = Boolean.parseBoolean(in.readLine());
             CB_TORQUE_CALIBRATION.setSelected(Boolean.parseBoolean(in.readLine()));
             TF_MOTOR_ACC.setText(in.readLine());
             CB_ASS_WITHOUT_PED.setSelected(Boolean.parseBoolean(in.readLine()));
@@ -331,7 +354,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 CB_CRUISE_ENABLED.setSelected(Boolean.parseBoolean(in.readLine()));
                 intThrottleMode = Integer.parseInt(in.readLine());
                 intThrottleModeOnStreetMode = Integer.parseInt(in.readLine());
-                TF_ASS_LEVELS_1_OF_5.setText(in.readLine());
+                TF_ASS_LEVELS_5_PERCENT.setText(in.readLine());
                 boolAlternativeMiles = Boolean.parseBoolean(in.readLine());
             }
             else {
@@ -342,7 +365,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 TF_SMOOTH_START_RAMP.setText("35");
                 boolTemperatureSensorType = false;
                 CB_CRUISE_ENABLED.setSelected(true);
-                TF_ASS_LEVELS_1_OF_5.setText("60");
+                TF_ASS_LEVELS_5_PERCENT.setText("60");
                 boolAlternativeMiles = false;
                 
                 if (boolOptionalAdcThrottle) {
@@ -376,6 +399,25 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 RB_PWM_19KHZ.setSelected(true);
                 TF_OVERCURRENT_DELAY.setText("2");
             }
+            
+            strLine = in.readLine();
+            if (strLine != null) {
+                boolMotorTypeTSDZ8 = Boolean.parseBoolean(strLine);
+            }
+            else {
+                boolMotorTypeTSDZ8 = false;
+            }
+            
+            strLine = in.readLine();
+            if (strLine != null) {
+                boolDisplayTypeEKD01 = Boolean.parseBoolean(strLine);
+                intAssistLevel5 = Integer.parseInt(in.readLine());
+            }
+            else {
+                boolDisplayTypeEKD01 = false;
+                intAssistLevel5 = DISABLED;
+            }
+            
             
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(null, "Corrupt .ini file or invalid data", "TSDZ2 Patameter Configurator", JOptionPane.INFORMATION_MESSAGE);
@@ -438,6 +480,16 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     JCB_ASSIST_MODE_ON_STARTUP.setSelectedIndex(HYBRID);
                 }
                 
+                if (boolMotorTypeTSDZ2_48V) {
+                    JCB_MOTOR_TYPE.setSelectedIndex(TSDZ2_48V);
+                }    
+                else if (boolMotorTypeTSDZ2_36V) {
+                    JCB_MOTOR_TYPE.setSelectedIndex(TSDZ2_36V);
+                }
+                else if (boolMotorTypeTSDZ8) {
+                    JCB_MOTOR_TYPE.setSelectedIndex(TSDZ8);
+                }
+                
                 if (boolDisplayTypeVLCD5) {
                     JCB_DISPLAY_TYPE.setSelectedIndex(VLCD5);
                 }    
@@ -449,6 +501,30 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 }
                 else if (boolDisplayType850C) {
                     JCB_DISPLAY_TYPE.setSelectedIndex(C850);
+                }
+                else if (boolDisplayTypeEKD01) {
+                    JCB_DISPLAY_TYPE.setSelectedIndex(EKD01);
+                }
+                
+                switch (intAssistLevel5) {
+                    case BEFORE_ECO:
+                        JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(BEFORE_ECO);
+                        if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                            TF_ASS_LEVELS_5_PERCENT.setText("60");
+                        }
+                        break;
+                    case AFTER_TURBO:
+                        JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(AFTER_TURBO);
+                        if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) < 100) {
+                            TF_ASS_LEVELS_5_PERCENT.setText("130");
+                        }
+                        break;
+                    default:
+                        JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(DISABLED);
+                        if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                            TF_ASS_LEVELS_5_PERCENT.setText("60");
+                        }
+                        break;
                 }
                 
                 if (boolStartupNone) {
@@ -585,12 +661,51 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     JCB_UNITS_TYPE.setSelectedIndex(ALTERNATIVE_MILES);
                 }
 
+            // other setting/TSDZ8_header.ini file
+            File File = new File(strTSDZ8other_settingsDirName + "/" + strTSDZ8headerFileName);
+		
+            if (!File.exists()) {
+                boolTSDZ8headerRead = false;
+            }
+            if (boolMotorTypeTSDZ8) {
+                BTN_COMPILE.setEnabled(boolTSDZ8headerRead);
+            }
+            
             try {
-		BufferedReader br = new BufferedReader (new FileReader("commits.txt"));
-                LB_LAST_COMMIT.setText("<html>" + br.readLine() + "</html>");
-                br.close();
+                try (BufferedReader br = new BufferedReader (new FileReader(strTSDZ8other_settingsDirName + "/" + strTSDZ8headerFileName))) {
+                    for(int i=0; i<TSDZ8_INI_LINE_NUMBER; i++) {
+                        strLine = br.readLine();
+                    
+                        if (strLine != null) {
+                            intTSDZ8headerArray[i] = Integer.parseInt(strLine.substring(strLine.indexOf(',') + 1));
+                        }
+                        else {
+                            intTSDZ8headerArray[i] = 0;
+                        }
+                    }
+                }
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "ommits.txt file not found" , "TSDZ2 Patameter Configurator", JOptionPane.INFORMATION_MESSAGE);
+                //if (boolMotorTypeTSDZ8) {
+                //    JOptionPane.showMessageDialog(null, "other setting/TSDZ8_header.ini file not found" , "TSDZ2 Patameter Configurator", JOptionPane.INFORMATION_MESSAGE);
+                //}
+            }
+            
+             // read commits.txt file
+            try {
+                try (BufferedReader br = new BufferedReader (new FileReader("commits.txt"))) {
+                    strLastCommit = br.readLine();
+                
+                    if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {
+                        LB_VERSION.setText("<html>Version (mstrens)</html>");
+                        LB_LAST_COMMIT.setText("<html>Maim " + intTSDZ8headerArray[0] + " - Sub " + intTSDZ8headerArray[1] + "</html>");
+                    }
+                    else {
+                        LB_VERSION.setText("<html>Version (last commits)</html>");
+                        LB_LAST_COMMIT.setText("<html>" + strLastCommit + "</html>");
+                    }
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "commits.txt file not found" , "TSDZ2 Patameter Configurator", JOptionPane.INFORMATION_MESSAGE);
             }
     }
 
@@ -603,15 +718,18 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         // JOptionPane.showMessageDialog(null,experimentalSettingsFilesModel.toString(),"Titel", JOptionPane.PLAIN_MESSAGE);
     }
 
+
+
     public TSDZ2_Configurator() {
         initComponents();
-
+        
+        this.setTitle("Parameter Configurator 5.3 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
         this.setLocationRelativeTo(null);
 
         // update lists
       
         experimentalSettingsDir = new File(Paths.get(".").toAbsolutePath().normalize().toString());
-      
+              
 	while (!Arrays.asList(experimentalSettingsDir.list()).contains("experimental settings")) {
             experimentalSettingsDir = experimentalSettingsDir.getParentFile();
         }
@@ -700,6 +818,543 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
 
         BTN_COMPILE.addActionListener(new ActionListener() {
 
+            // mstrens test -------------------------------------------
+     public Integer decAdr = 61440;
+     
+     public String mstrensHexLine(Integer value){
+         String s = String.format("%04x", value);
+         s = ":02" + String.format("%04x", decAdr) + "00" + s.substring(2, 4) + s.substring(0, 2);
+         Integer crc = Integer.parseInt(s.substring(1,3), 16);
+         crc += Integer.parseInt(s.substring(3,5), 16);
+         crc += Integer.parseInt(s.substring(5,7), 16);
+         crc += Integer.parseInt(s.substring(7,9), 16);
+         crc += Integer.parseInt(s.substring(9,11), 16);
+         crc += Integer.parseInt(s.substring(11,13), 16);
+         crc = -(crc % 256); // modulo
+         String s2 = String.format("%8s", Integer.toBinaryString(crc)).replace(" ", "0"); // binary
+         String s3 = s2.substring(s2.length()-8, s2.length());
+         Integer i2 = Integer.parseInt(s3, 2); // decimal
+         String s4 =String.format("%02x", i2);
+         s = s + s4;
+         decAdr += 2;
+         return s;
+     }
+ 
+             // duplicate write *********************************************
+     public void mstrens_generate_hex_file() {        
+             decAdr = 61440; // set start address of HEX =F000
+            Integer configMainVersion = intTSDZ8headerArray[0];
+            Integer configSubVersion = intTSDZ8headerArray[1];
+            Integer global_offset_angle = intTSDZ8headerArray[2] ; // logical value should be -5/+5 but in order to keep a positive value, we add 100
+                                                // So 100 in the generated HEX file means 0 in TSDZ8 firmware. The value 100 is substracted in TSDZ8.
+            Integer foc_angle_multiplier = intTSDZ8headerArray[3];  // to be fine tuned; this is just a first basis
+            Integer reserve_3 = intTSDZ8headerArray[4];
+             Integer reserve_4 = intTSDZ8headerArray[5];
+             Integer reserve_5 = intTSDZ8headerArray[6];
+             Integer reserve_6 = intTSDZ8headerArray[7];
+             Integer reserve_7 = intTSDZ8headerArray[8];
+             Integer reserve_8 = intTSDZ8headerArray[9];
+ 
+                 PrintWriter mWriter = null;
+                 
+                 try {
+                    TSDZ8file_to_flashDir = new File(Paths.get(".").toAbsolutePath().normalize().toString());
+                    TSDZ8file_to_flashDir = new File(TSDZ8file_to_flashDir.getAbsolutePath() + File.separator + strTSDZ8files_to_flashDirName);
+                    if (!TSDZ8file_to_flashDir.isDirectory()) {
+                        TSDZ8file_to_flashDir.mkdir();
+                    }
+                     
+                     mWriter = new PrintWriter(new BufferedWriter(new FileWriter(strTSDZ8files_to_flashDirName + File.separator + strTSDZ8configFileName)));
+                     String text_to_save;
+                     mWriter.println(":020000041000EA");
+                     mWriter.println(":02ff0000FF0000");
+                     mWriter.println(mstrensHexLine(configMainVersion)); //00
+                     mWriter.println(mstrensHexLine(configSubVersion));  //02
+                     mWriter.println(mstrensHexLine(global_offset_angle)); //04
+                     mWriter.println(mstrensHexLine(foc_angle_multiplier));  //06
+                     mWriter.println(mstrensHexLine(reserve_3));  //08
+                     mWriter.println(mstrensHexLine(reserve_4));  //0A
+                     mWriter.println(mstrensHexLine(reserve_5));  //0C
+                     mWriter.println(mstrensHexLine(reserve_6));  //0E
+                     mWriter.println(mstrensHexLine(reserve_7));  //10
+                     mWriter.println(mstrensHexLine(reserve_8));  //12
+                    
+                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ2_36V) { // 14 MOTOR_TYPE 1
+                        mWriter.println(mstrensHexLine(1));
+                     }
+                     else {   // 14 MOTOR_TYPE 0
+                        mWriter.println(mstrensHexLine(0));
+                     } // 14
+                
+                     if (CB_TORQUE_CALIBRATION.isSelected()) { // 16 TORQUE_SENSOR_CALIBRATED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else { // 16 TORQUE_SENSOR_CALIBRATED 0
+                         mWriter.println(mstrensHexLine(0));
+                     } //16
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_MOTOR_ACC.getText()))); // 18 MOTOR_ACCELERATION
+     
+                     if (CB_ASS_WITHOUT_PED.isSelected()) { // 1A MOTOR_ASSISTANCE_WITHOUT_PEDAL_ROTATION 1";
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                 // 1A MOTOR_ASSISTANCE_WITHOUT_PEDAL_ROTATION 0";
+                         mWriter.println(mstrensHexLine(0));
+                     } 
+     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASS_WITHOUT_PED_THRES.getText()))); // 1C ASSISTANCE_WITHOUT_PEDAL_ROTATION_THRESHOLD
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQ_PER_ADC_STEP.getText()))); // 1E PEDAL_TORQUE_PER_10_BIT_ADC_STEP_X100
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQUE_ADC_MAX.getText()))); // 20 PEDAL_TORQUE_ADC_MAX
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BOOST_TORQUE_FACTOR.getText()))); // 22 STARTUP_BOOST_TORQUE_FACTOR
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_MOTOR_BLOCK_TIME.getText()))); // 24 MOTOR_BLOCKED_COUNTER_THRESHOLD
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_MOTOR_BLOCK_CURR.getText()))); // 26 MOTOR_BLOCKED_BATTERY_CURRENT_THRESHOLD_X10
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_MOTOR_BLOCK_ERPS.getText()))); // 28 MOTOR_BLOCKED_ERPS_THRESHOLD
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BOOST_CADENCE_STEP.getText()))); // 2A STARTUP_BOOST_CADENCE_STEP
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BAT_CUR_MAX.getText()))); // 2C BATTERY_CURRENT_MAX
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BATT_POW_MAX.getText()))); // 2E TARGET_MAX_BATTERY_POWER
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BATT_CAPACITY.getText()))); // 30 TARGET_MAX_BATTERY_CAPACITY
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BATT_NUM_CELLS.getText()))); // 32 BATTERY_CELLS_NUMBER
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_MOTOR_DEC.getText()))); // 34 MOTOR_DECELERATION
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BATT_VOLT_CUT_OFF.getText()))); // 36 BATTERY_LOW_VOLTAGE_CUT_OFF
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BATT_VOLT_CAL.getText()))); // 38 ACTUAL_BATTERY_VOLTAGE_PERCENT
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_BATT_CAPACITY_CAL.getText()))); // 3A ACTUAL_BATTERY_CAPACITY_PERCENT
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_OVER.getText()) * 100 ))); // 3C LI_ION_CELL_OVERVOLT
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_SOC.getText()) * 100 ))); // 3E LI_ION_CELL_RESET_SOC_PERCENT
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_FULL.getText()) * 100 ))); // 40 LI_ION_CELL_VOLTS_FULL
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_3_4.getText()) * 100 ))); // 42 LI_ION_CELL_VOLTS_3_OF_4
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_2_4.getText()) * 100 ))); // 44 LI_ION_CELL_VOLTS_2_OF_4
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_1_4.getText()) * 100 ))); // 46 LI_ION_CELL_VOLTS_1_OF_4
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_5_6.getText()) * 100 ))); // 48 LI_ION_CELL_VOLTS_5_OF_6
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_4_6.getText()) * 100 ))); // 4A LI_ION_CELL_VOLTS_4_OF_6
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_3_6.getText()) * 100 ))); // 4C LI_ION_CELL_VOLTS_3_OF_6
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_2_6.getText()) * 100 ))); // 4E LI_ION_CELL_VOLTS_2_OF_6
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_1_6.getText()) * 100 ))); // 50 LI_ION_CELL_VOLTS_1_OF_6
+                     mWriter.println(mstrensHexLine((int)(Float.parseFloat(TF_BAT_CELL_EMPTY.getText()) * 100 ))); // 52 LI_ION_CELL_VOLTS_EMPTY
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_WHEEL_CIRCUMF.getText()))); // 54 WHEEL_PERIMETER
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intMaxSpeed)))); // 56 WHEEL_MAX_SPEED
+                     
+                     if (CB_LIGHTS.isSelected()) {             //  58 ENABLE_LIGHTS 1
+                         mWriter.println(mstrensHexLine(1)); 
+                     }
+                     else {                                    //  58 ENABLE_LIGHTS 0
+                         mWriter.println(mstrensHexLine(0)); 
+                     }
+                     
+                     if (CB_WALK_ASSIST_ENABLED.isSelected()) { //  5A ENABLE_WALK_ASSIST 1
+                         mWriter.println(mstrensHexLine(1)); 
+                     }
+                     else {                                     // 5A ENABLE_WALK_ASSIST 0
+                         mWriter.println(mstrensHexLine(0)); 
+                     }
+                     
+                     if ((JCB_BRAKE_FEATURE.getSelectedIndex() == BRAKE_SENSOR)||(JCB_BRAKE_FEATURE.getSelectedIndex() == TEMPERATURE_SWITCH)) {
+                         mWriter.println(mstrensHexLine(1)); // 5C ENABLE_BRAKE_SENSOR 1 
+                     }
+                     else {
+                         mWriter.println(mstrensHexLine(0));  // 5C ENABLE_BRAKE_SENSOR 0
+                     }
+                     
+                     if (JCB_OPTIONAL_ADC.getSelectedIndex() == DISABLED) {
+                         mWriter.println(mstrensHexLine(0)); // 5E ENABLE_THROTTLE 0 
+                         mWriter.println(mstrensHexLine(0)); // 60 ENABLE_TEMPERATURE_LIMIT 0 
+                     }
+                     
+                     if (JCB_OPTIONAL_ADC.getSelectedIndex() == THROTTLE) {
+                         mWriter.println(mstrensHexLine(1)); // 5E ENABLE_THROTTLE 1
+                         mWriter.println(mstrensHexLine(0)); // 60 ENABLE_TEMPERATURE_LIMIT 0 
+                     }
+                     
+                     if (JCB_OPTIONAL_ADC.getSelectedIndex() == TEMPERATURE) {
+                         //text_to_save = "#define ENABLE_THROTTLE 0"+System.getProperty("line.separator")+"#define ENABLE_TEMPERATURE_LIMIT 1";
+                         mWriter.println(mstrensHexLine(0)); // 5E ENABLE_THROTTLE 0
+                         mWriter.println(mstrensHexLine(1));  // 60 ENABLE_TEMPERATURE_LIMIT 1
+                     }
+                     
+                     if (CB_STREET_MODE_ON_START.isSelected()) { // 62 ENABLE_STREET_MODE_ON_STARTUP 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                      // 62 ENABLE_STREET_MODE_ON_STARTUP 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_SET_PARAM_ON_START.isSelected()) {   // 64 ENABLE_SET_PARAMETER_ON_STARTUP 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                      // 64 ENABLE_SET_PARAMETER_ON_STARTUP 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_ODO_COMPENSATION.isSelected()) {     // 66 ENABLE_ODOMETER_COMPENSATION 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                     // 66 ENABLE_ODOMETER_COMPENSATION 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_STARTUP_BOOST_ON_START.isSelected()) { //  68 STARTUP_BOOST_ON_STARTUP 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                        // 68 STARTUP_BOOST_ON_STARTUP 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_TOR_SENSOR_ADV.isSelected()) {        // 6A TORQUE_SENSOR_ADV_ON_STARTUP 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                       // 6A TORQUE_SENSOR_ADV_ON_STARTUP 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+ 
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_LIGHT_MODE_ON_START.getText()))); // 6C LIGHTS_CONFIGURATION_ON_STARTUP
+                    
+                     if (JCB_ASSIST_MODE_ON_STARTUP.getSelectedIndex() == POWER) { // 6E RIDING_MODE_ON_STARTUP 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     if (JCB_ASSIST_MODE_ON_STARTUP.getSelectedIndex() == TORQUE) { // 6E RIDING_MODE_ON_STARTUP 2
+                         mWriter.println(mstrensHexLine(2));
+                     }
+                     if (JCB_ASSIST_MODE_ON_STARTUP.getSelectedIndex() == CADENCE) { // 6E RIDING_MODE_ON_STARTUP 3
+                         mWriter.println(mstrensHexLine(3));
+                     }
+                     if (JCB_ASSIST_MODE_ON_STARTUP.getSelectedIndex() == EMTB) { // 6E RIDING_MODE_ON_STARTUP 4"
+                         mWriter.println(mstrensHexLine(4));
+                     }
+                     if (JCB_ASSIST_MODE_ON_STARTUP.getSelectedIndex() == HYBRID) { // 6E RIDING_MODE_ON_STARTUP 5
+                         mWriter.println(mstrensHexLine(5));
+                     }
+     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_LIGHT_MODE_1.getText()))); // 70 LIGHTS_CONFIGURATION_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_LIGHT_MODE_2.getText()))); // 72 LIGHTS_CONFIGURATION_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_LIGHT_MODE_3.getText()))); // 74 LIGHTS_CONFIGURATION_3
+                     
+                     if (CB_STREET_POWER_LIM.isSelected()) { // 76 STREET_MODE_POWER_LIMIT_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                 // 76 STREET_MODE_POWER_LIMIT_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_STREET_POWER_LIM.getText()))); // 78 STREET_MODE_POWER_LIMIT
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intStreetSpeed)))); // 7A STREET_MODE_SPEED_LIMIT
+                     
+                     // Not used
+                     if ((JCB_OPTIONAL_ADC.getSelectedIndex() == THROTTLE)&&(JCB_THROTTLE_MODE_STREET.getSelectedIndex() == UNCONDITIONAL)) {
+                         mWriter.println(mstrensHexLine(1)); // 7C STREET_MODE_THROTTLE_ENABLED 1
+                     }
+                     else { 
+                         mWriter.println(mstrensHexLine(0)); // 7C STREET_MODE_THROTTLE_ENABLED 0
+                     }
+     
+                     if (CB_STREET_CRUISE.isSelected()) {   //  7E STREET_MODE_CRUISE_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                //  7E STREET_MODE_CRUISE_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+ 
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ADC_THROTTLE_MIN.getText()))); // 80 ADC_THROTTLE_MIN_VALUE
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ADC_THROTTLE_MAX.getText()))); // 82 ADC_THROTTLE_MAX_VALUE
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TEMP_MIN_LIM.getText()))); // 84 MOTOR_TEMPERATURE_MIN_VALUE_LIMIT
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TEMP_MAX_LIM.getText()))); // 86 MOTOR_TEMPERATURE_MAX_VALUE_LIMIT
+                     
+                     if (CB_TEMP_ERR_MIN_LIM.isSelected()) {         // 8A ENABLE_TEMPERATURE_ERROR_MIN_LIMIT 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                          // 8A ENABLE_TEMPERATURE_ERROR_MIN_LIMIT 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD6) { //  8C ENABLE_VLCD6 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                              //  8C ENABLE_VLCD6 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD5) { // 8C ENABLE_VLCD5 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                             //  8C ENABLE_VLCD5 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == XH18) { // 8E ENABLE_XH18 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                             // 8E ENABLE_XH18 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     
+                     if (RB_DISPLAY_WORK_ON.isSelected()) {            //  90 ENABLE_DISPLAY_WORKING_FLAG 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                            // 90 ENABLE_DISPLAY_WORKING_FLAG 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (RB_DISPLAY_ALWAY_ON.isSelected()) {          // 92 ENABLE_DISPLAY_ALWAYS_ON 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                           // 92 ENABLE_DISPLAY_ALWAYS_ON 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_MAX_SPEED_DISPLAY.isSelected()) {        //  94 ENABLE_WHEEL_MAX_SPEED_FROM_DISPLAY 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                          //  94 ENABLE_WHEEL_MAX_SPEED_FROM_DISPLAY 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DELAY_MENU.getText()))); // 96 DELAY_MENU_ON
+                     
+                     if (JCB_BRAKE_FEATURE.getSelectedIndex() == COASTER_BRAKE) { // 98 COASTER_BRAKE_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                       // 98 COASTER_BRAKE_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_COASTER_BRAKE_THRESHOLD.getText()))); // 9A COASTER_BRAKE_TORQUE_THRESHOLD
+                     
+                     if (CB_AUTO_DISPLAY_DATA.isSelected()) {                 // 9C ENABLE_AUTO_DATA_DISPLAY 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                   // 9C ENABLE_AUTO_DATA_DISPLAY 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_STARTUP_ASSIST_ENABLED.isSelected()) {            // 9E STARTUP_ASSIST_ENABLED 1";
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                   // 9E STARTUP_ASSIST_ENABLED 0";
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DELAY_DATA_1.getText()))); // A0 DELAY_DISPLAY_DATA_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DELAY_DATA_2.getText()))); // A2 DELAY_DISPLAY_DATA_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DELAY_DATA_3.getText()))); // A4 DELAY_DISPLAY_DATA_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DELAY_DATA_4.getText()))); // A6 DELAY_DISPLAY_DATA_4
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DELAY_DATA_5.getText()))); // A8 DELAY_DISPLAY_DATA_5
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DELAY_DATA_6.getText()))); // AA DELAY_DISPLAY_DATA_6
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DATA_1.getText()))); // AC DISPLAY_DATA_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DATA_2.getText()))); // AE DISPLAY_DATA_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DATA_3.getText()))); // B0 DISPLAY_DATA_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DATA_4.getText()))); // B2 DISPLAY_DATA_4
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DATA_5.getText()))); // B4 DISPLAY_DATA_5
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_DATA_6.getText()))); // B6 DISPLAY_DATA_6
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_POWER_ASS_1.getText()))); // B8 POWER_ASSIST_LEVEL_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_POWER_ASS_2.getText()))); // BA POWER_ASSIST_LEVEL_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_POWER_ASS_3.getText()))); // BC POWER_ASSIST_LEVEL_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_POWER_ASS_4.getText()))); // BE POWER_ASSIST_LEVEL_4
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQUE_ASS_1.getText()))); // C0 TORQUE_ASSIST_LEVEL_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQUE_ASS_2.getText()))); // C2 TORQUE_ASSIST_LEVEL_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQUE_ASS_3.getText()))); // C4 TORQUE_ASSIST_LEVEL_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQUE_ASS_4.getText()))); // C6 TORQUE_ASSIST_LEVEL_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_CADENCE_ASS_1.getText()))); // C8 CADENCE_ASSIST_LEVEL_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_CADENCE_ASS_2.getText()))); // CA CADENCE_ASSIST_LEVEL_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_CADENCE_ASS_3.getText()))); // CC CADENCE_ASSIST_LEVEL_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_CADENCE_ASS_4.getText()))); // CE CADENCE_ASSIST_LEVEL_4
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_EMTB_ASS_1.getText()))); // D0 EMTB_ASSIST_LEVEL_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_EMTB_ASS_2.getText()))); // D2 EMTB_ASSIST_LEVEL_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_EMTB_ASS_3.getText()))); // D4 EMTB_ASSIST_LEVEL_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_EMTB_ASS_4.getText()))); // D6 EMTB_ASSIST_LEVEL_4
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intWalkSpeed1)))); // D8 WALK_ASSIST_LEVEL_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intWalkSpeed2)))); // DA WALK_ASSIST_LEVEL_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intWalkSpeed3)))); // DC WALK_ASSIST_LEVEL_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intWalkSpeed4)))); // DE WALK_ASSIST_LEVEL_4
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intWalkSpeedLimit)))); // E0 WALK_ASSIST_THRESHOLD_SPEED_X10
+                     
+                     if (CB_WALK_TIME_ENA.isSelected()) {                   //  E2 WALK_ASSIST_DEBOUNCE_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                 //  E2 WALK_ASSIST_DEBOUNCE_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_WALK_ASS_TIME.getText()))); // E4 WALK_ASSIST_DEBOUNCE_TIME
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intCruiseSpeed1)))); // E6 CRUISE_TARGET_SPEED_LEVEL_1
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intCruiseSpeed2)))); // E8 CRUISE_TARGET_SPEED_LEVEL_2
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intCruiseSpeed3)))); // EA CRUISE_TARGET_SPEED_LEVEL_3
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intCruiseSpeed4)))); // EC CRUISE_TARGET_SPEED_LEVEL_4
+                     
+                     if (CB_CRUISE_WHITOUT_PEDALING.isSelected()) {                    // EE CRUISE_MODE_WALK_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                            // EE CRUISE_MODE_WALK_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intCruiseSpeed)))); // F0 CRUISE_THRESHOLD_SPEED
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQ_ADC_OFFSET.getText()))); // F2 PEDAL_TORQUE_ADC_OFFSET
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_NUM_DATA_AUTO_DISPLAY.getText()))); // F4 AUTO_DATA_NUMBER_DISPLAY
+                 
+                     if ((JCB_UNITS_TYPE.getSelectedIndex() == KILOMETERS)||(JCB_UNITS_TYPE.getSelectedIndex() == ALTERNATIVE_MILES)) {
+                         mWriter.println(mstrensHexLine(0));          // F6 UNITS_TYPE 0
+                     }
+                     
+                     if (JCB_UNITS_TYPE.getSelectedIndex() == MILES) {
+                         if (boolDisplayTypeVLCD6) {
+                             mWriter.println(mstrensHexLine(0));     // F6 UNITS_TYPE 0
+                         }
+                         else {
+                             mWriter.println(mstrensHexLine(1));     // F6 UNITS_TYPE 1
+                         }
+                     }
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASSIST_THROTTLE_MIN.getText()))); // F8 ASSIST_THROTTLE_MIN_VALUE
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASSIST_THROTTLE_MAX.getText()))); // FA ASSIST_THROTTLE_MAX_VALUE
+                     
+                     if (CB_STREET_WALK.isSelected()) {                        // FC STREET_MODE_WALK_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                    // FC STREET_MODE_WALK_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     
+                     if (JCB_DATA_ON_STARTUP.getSelectedIndex() == NONE) { // FE DATA_DISPLAY_ON_STARTUP 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     if (JCB_DATA_ON_STARTUP.getSelectedIndex() == SOC) { // FE DATA_DISPLAY_ON_STARTUP 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     if (JCB_DATA_ON_STARTUP.getSelectedIndex() == VOLTS) { // FE DATA_DISPLAY_ON_STARTUP 2
+                         mWriter.println(mstrensHexLine(2));
+                     }
+     
+                     if (CB_FIELD_WEAKENING_ENABLED.isSelected()) { // 100 FIELD_WEAKENING_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                         // 100 FIELD_WEAKENING_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intTorqueOffsetAdj)))); // 102 PEDAL_TORQUE_ADC_OFFSET_ADJ
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intTorqueRangeAdj)))); // 104 PEDAL_TORQUE_ADC_RANGE_ADJ
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(intAdcPedalTorqueAngleAdjArray[intTorqueAngleAdj])))); // 106 PEDAL_TORQUE_ADC_ANGLE_ADJ
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_TORQ_PER_ADC_STEP_ADV.getText()))); // 108 PEDAL_TORQUE_PER_10_BIT_ADC_STEP_ADV_X100
+                   
+                     if (JCB_SOC_CALC.getSelectedIndex() == AUTO) { // 10A SOC_PERCENT_CALC 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     if (JCB_SOC_CALC.getSelectedIndex() == WH) { //  10A SOC_PERCENT_CALC 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     if (JCB_SOC_CALC.getSelectedIndex() == VOLTS) { // 10A SOC_PERCENT_CALC 2
+                         mWriter.println(mstrensHexLine(2));
+                     }
+                     
+                     if (RB_BOOST_AT_ZERO_CADENCE.isSelected()) { // 10C STARTUP_BOOST_AT_ZERO 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     if (RB_BOOST_AT_ZERO_SPEED.isSelected()) {  // 10C STARTUP_BOOST_AT_ZERO 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                         
+                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == C850) { // 10E ENABLE_850C 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                             //  10E ENABLE_850C 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     // not used
+                     if ((JCB_OPTIONAL_ADC.getSelectedIndex() == THROTTLE)&&(JCB_THROTTLE_MODE_STREET.getSelectedIndex() == PEDALING)) {
+                         mWriter.println(mstrensHexLine(1));  // 110 STREET_MODE_THROTTLE_LEGAL 1
+                     }
+                     else {
+                         mWriter.println(mstrensHexLine(0));   // 110 STREET_MODE_THROTTLE_LEGAL 0
+                     }
+                     
+                     if (JCB_BRAKE_FEATURE.getSelectedIndex() == TEMPERATURE_SWITCH) { //  112 BRAKE_TEMPERATURE_SWITCH 1";
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                            //  112 BRAKE_TEMPERATURE_SWITCH 0";
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     
+                     if (RB_eMTB_POWER.isSelected()) {                 // 114 eMTB_BASED_ON_POWER 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     if (RB_eMTB_TORQUE.isSelected()) {                // 114 eMTB_BASED_ON_POWER 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_SMOOTH_START_ENABLED.isSelected()) {       // 116 SMOOTH_START_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                            // 116 SMOOTH_START_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_SMOOTH_START_RAMP.getText()))); // 118 SMOOTH_START_SET_PERCENT
+                     
+                     if (JCB_TEMP_SENSOR_TYPE.getSelectedIndex() == LM35) { // 11A TEMPERATURE_SENSOR_TYPE 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     else {                                                 // 11A TEMPERATURE_SENSOR_TYPE 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     
+                     if (CB_CRUISE_ENABLED.isSelected()) {                  // 11C CRUISE_MODE_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                 // 11C CRUISE_MODE_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE.getSelectedIndex())))); // 11E THROTTLE_MODE
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE_STREET.getSelectedIndex())))); // 120 STREET_MODE_THROTTLE_MODE
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText()))); // 122 ASSIST_LEVEL_5_PERCENT
+                     
+                     if ((JCB_UNITS_TYPE.getSelectedIndex() == ALTERNATIVE_MILES)||((JCB_UNITS_TYPE.getSelectedIndex() == MILES)&&(boolDisplayTypeVLCD6))) {
+                         mWriter.println(mstrensHexLine(1)); // 124 ALTERNATIVE_MILES 1
+                     }
+                     else {                                        // 124 ALTERNATIVE_MILES 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (RB_PWM_18KHZ.isSelected()) {              // 126 PWM_FREQ 18
+                         mWriter.println(mstrensHexLine(18));
+                     }
+                     if (RB_PWM_19KHZ.isSelected()) {              // 126 PWM_FREQ 19
+                         mWriter.println(mstrensHexLine(19));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_OVERCURRENT_DELAY.getText()))); // 128 OVERCURRENT_DELAY
+                     
+                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {      // 12A MOTOR_Type
+                        mWriter.println(mstrensHexLine(1));
+                     }
+                     else {
+                        mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                    if (JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01) {     // 12B ENABLE_EKD01
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                    else {
+                        mWriter.println(mstrensHexLine(0));
+                    }
+                    
+                    mWriter.println(mstrensHexLine(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()));     // 12C 0=DISABLED 1=BEFORE_ECO 2=AFTER_TURBO
+                    
+                     mWriter.println(":00000001FF");   // End of hex file
+                 } catch (IOException ioe) {
+                         ioe.printStackTrace(System.err);
+                 } finally {
+                         if (mWriter != null) {
+                             mWriter.flush();
+                             mWriter.close();
+                         }
+                 }
+         }    // end duplicate write    
+ 
+
         public void actionPerformed(ActionEvent arg0) {
             PrintWriter iWriter = null;
             PrintWriter pWriter = null;
@@ -721,18 +1376,21 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                                 + "#define CONFIG_H_\r\n");
                 String text_to_save;
 
-                if (RB_MOTOR_36V.isSelected()) {
+                if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ2_36V) {
                     text_to_save = "#define MOTOR_TYPE 1";
                     pWriter.println(text_to_save);
                 }
-                iWriter.println(RB_MOTOR_36V.isSelected());
-
-                if (RB_MOTOR_48V.isSelected()) {
+                else if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ2_48V) {
                     text_to_save = "#define MOTOR_TYPE 0";
                     pWriter.println(text_to_save);
                 }
-                iWriter.println(RB_MOTOR_48V.isSelected());
-
+                else {
+                    text_to_save = "#define MOTOR_TYPE 0";
+                    pWriter.println(text_to_save);
+                }
+                iWriter.println(boolMotorTypeTSDZ2_36V);
+                iWriter.println(boolMotorTypeTSDZ2_48V);
+                
                 if (CB_TORQUE_CALIBRATION.isSelected()) {
                     text_to_save = "#define TORQUE_SENSOR_CALIBRATED 1";
                     pWriter.println(text_to_save);
@@ -1466,7 +2124,15 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     pWriter.println(text_to_save);
                 }
                 iWriter.println(boolSocVolts);
-
+                
+                if (CB_ADC_STEP_ESTIM.isSelected()) {
+                    text_to_save = "#define TORQUE_SENSOR_ESTIMATED 1";
+                    pWriter.println(text_to_save);
+                }
+                else {
+                text_to_save = "#define TORQUE_SENSOR_ESTIMATED 0";
+                pWriter.println(text_to_save);
+                }
                 iWriter.println(CB_ADC_STEP_ESTIM.isSelected());
 
                 if (RB_BOOST_AT_ZERO_CADENCE.isSelected()) {
@@ -1482,11 +2148,11 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 iWriter.println(RB_BOOST_AT_ZERO_SPEED.isSelected());
 
                 if (JCB_DISPLAY_TYPE.getSelectedIndex() == C850) {
-                    text_to_save = "#define ENABLEC850 1";
+                    text_to_save = "#define ENABLE_850C 1";
                     pWriter.println(text_to_save);
                 }
                 else {
-                    text_to_save = "#define ENABLEC850 0";
+                    text_to_save = "#define ENABLE_850C 0";
                     pWriter.println(text_to_save);
                 }
                 iWriter.println(boolDisplayType850C);
@@ -1567,8 +2233,8 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 iWriter.println(String.valueOf(JCB_THROTTLE_MODE_STREET.getSelectedIndex()));
                 pWriter.println(text_to_save);
                 
-                text_to_save = "#define ASSIST_LEVEL_1_OF_5_PERCENT " + TF_ASS_LEVELS_1_OF_5.getText();
-                iWriter.println(TF_ASS_LEVELS_1_OF_5.getText());
+                text_to_save = "#define ASSIST_LEVEL_5_PERCENT " + TF_ASS_LEVELS_5_PERCENT.getText();
+                iWriter.println(TF_ASS_LEVELS_5_PERCENT.getText());
                 pWriter.println(text_to_save);
                 
                 if ((JCB_UNITS_TYPE.getSelectedIndex() == ALTERNATIVE_MILES)||((JCB_UNITS_TYPE.getSelectedIndex() == MILES)&&(boolDisplayTypeVLCD6))) {
@@ -1596,7 +2262,43 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 text_to_save = "#define OVERCURRENT_DELAY " + TF_OVERCURRENT_DELAY.getText();
                 iWriter.println(TF_OVERCURRENT_DELAY.getText());
                 pWriter.println(text_to_save);
-
+                
+                 if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {
+                    text_to_save = "#define MOTOR_TYPE_TSDZ8 1";
+                    pWriter.println(text_to_save);
+                }
+                else {
+                    text_to_save = "#define MOTOR_TYPE_TSDZ8 0";
+                    pWriter.println(text_to_save);
+                }
+                iWriter.println(boolMotorTypeTSDZ8);
+                
+                if (JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01) {
+                    text_to_save = "#define ENABLE_EKD01 1";
+                    pWriter.println(text_to_save);
+                }
+                else {
+                    text_to_save = "#define ENABLE_EKD01 0";
+                    pWriter.println(text_to_save);
+                }
+                iWriter.println(boolDisplayTypeEKD01);
+                   
+                switch (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()) {
+                    case BEFORE_ECO:
+                        text_to_save = "#define ASSIST_LEVEL_5_MODE 1";
+                        pWriter.println(text_to_save);
+                        break;
+                    case AFTER_TURBO:
+                        text_to_save = "#define ASSIST_LEVEL_5_MODE 2";
+                        pWriter.println(text_to_save);
+                        break;
+                    default:
+                        text_to_save = "#define ASSIST_LEVEL_5_MODE 0";  // BEFORE_ECO
+                        pWriter.println(text_to_save);
+                        break;
+                }
+                iWriter.println(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex());
+                
                 pWriter.println("\r\n#endif /* CONFIG_H_ */");
 
                 iWriter.close();
@@ -1609,29 +2311,35 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                         pWriter.close();
                     }
             }
-            
-                try {
-                    String backup_name = newFile.getName();
-                    backup_name = backup_name.substring(0, backup_name.lastIndexOf('.')); //remove ini extension
 
-                    // Detect OS
-                    OSType os = getOperatingSystem();
-                    Process process;
-                    switch(os) {
-                        case Windows:
-                            process = Runtime.getRuntime().exec("cmd /c start compile_and_flash_20 " + backup_name);
+                if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {
+                    mstrens_generate_hex_file();
+                    JOptionPane.showMessageDialog(null, strTSDZ8configFileName + " ready in files_to_flash folder");
+                } 
+                else {
+                    try {
+                        String backup_name = newFile.getName();
+                        backup_name = backup_name.substring(0, backup_name.lastIndexOf('.')); //remove ini extension
+
+                        // Detect OS
+                        OSType os = getOperatingSystem();
+                        Process process;
+                        switch(os) {
+                            case Windows:
+                                process = Runtime.getRuntime().exec("cmd /c start compile_and_flash_20 " + backup_name);
                             break;
-                        case MacOS:
-                        case Linux:
-                            process = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", "xterm -fa fixed -fs 10 -hold -e 'sh compile_and_flash_20.sh " + backup_name + "'" });
-                            break;
-                        case Other:
-                            default:
-                            JOptionPane.showMessageDialog(null, " Unknown OS.\n Please run:\ncd src && make && make clear_eeprom && make flash\nto compile and flash your TSDZ2.");
-                            break;
+                            case MacOS:
+                            case Linux:
+                                process = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", "xterm -fa fixed -fs 10 -hold -e 'sh compile_and_flash_20.sh " + backup_name + "'" });
+                                break;
+                            case Other:
+                                default:
+                                JOptionPane.showMessageDialog(null, " Unknown OS.\n Please run:\ncd src && make && make clear_eeprom && make flash\nto compile and flash your TSDZ2.");
+                                break;
+                        }
+                    } catch (IOException e1) {
+                        e1.printStackTrace(System.err);
                     }
-                } catch (IOException e1) {
-                    e1.printStackTrace(System.err);
                 }
             }
         });
@@ -1689,7 +2397,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         jPanel6 = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         Label_Parameter1 = new javax.swing.JLabel();
-        RB_MOTOR_36V = new javax.swing.JRadioButton();
         CB_ASS_WITHOUT_PED = new javax.swing.JCheckBox();
         jLabel20 = new javax.swing.JLabel();
         TF_BOOST_TORQUE_FACTOR = new javax.swing.JTextField();
@@ -1698,7 +2405,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_ASS_WITHOUT_PED_THRES = new javax.swing.JTextField();
         jLabel22 = new javax.swing.JLabel();
         TF_BOOST_CADENCE_STEP = new javax.swing.JTextField();
-        RB_MOTOR_48V = new javax.swing.JRadioButton();
         jLabelMotorFastStop = new javax.swing.JLabel();
         TF_MOTOR_DEC = new javax.swing.JTextField();
         jLabel33 = new javax.swing.JLabel();
@@ -1707,7 +2413,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         CB_STARTUP_BOOST_ON_START = new javax.swing.JCheckBox();
         CB_FIELD_WEAKENING_ENABLED = new javax.swing.JCheckBox();
         CB_STARTUP_ASSIST_ENABLED = new javax.swing.JCheckBox();
-        jLabel88 = new javax.swing.JLabel();
         CB_SMOOTH_START_ENABLED = new javax.swing.JCheckBox();
         jLabel77 = new javax.swing.JLabel();
         TF_SMOOTH_START_RAMP = new javax.swing.JTextField();
@@ -1716,14 +2421,15 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         RB_PWM_19KHZ = new javax.swing.JRadioButton();
         jLabel92 = new javax.swing.JLabel();
         TF_OVERCURRENT_DELAY = new javax.swing.JTextField();
+        JCB_MOTOR_TYPE = new javax.swing.JComboBox<>();
+        jLabel10 = new javax.swing.JLabel();
+        TF_BATT_POW_MAX = new javax.swing.JTextField();
         jPanel3 = new javax.swing.JPanel();
         jLabel18 = new javax.swing.JLabel();
         jLabel21 = new javax.swing.JLabel();
         TF_BATT_CAPACITY = new javax.swing.JTextField();
         jLabel9 = new javax.swing.JLabel();
         TF_BAT_CUR_MAX = new javax.swing.JTextField();
-        jLabel10 = new javax.swing.JLabel();
-        TF_BATT_POW_MAX = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
         TF_BATT_NUM_CELLS = new javax.swing.JTextField();
         jLabel24 = new javax.swing.JLabel();
@@ -1858,8 +2564,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_LIGHT_MODE_3 = new javax.swing.JTextField();
         jLabelLights3 = new javax.swing.JLabel();
         CB_LIGHTS = new javax.swing.JCheckBox();
-        jLabel67 = new javax.swing.JLabel();
-        TF_ASS_LEVELS_1_OF_5 = new javax.swing.JTextField();
         jPanel10 = new javax.swing.JPanel();
         jLabel17 = new javax.swing.JLabel();
         jLabelStreetSpeed = new javax.swing.JLabel();
@@ -1872,6 +2576,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         CB_STREET_MODE_ON_START = new javax.swing.JCheckBox();
         JCB_THROTTLE_MODE_STREET = new javax.swing.JComboBox<>();
         jLabel80 = new javax.swing.JLabel();
+        jLabel67 = new javax.swing.JLabel();
+        TF_ASS_LEVELS_5_PERCENT = new javax.swing.JTextField();
+        JCB_ASSIST_LEVEL_5_MODE = new javax.swing.JComboBox<>();
         jPanel8 = new javax.swing.JPanel();
         jPanel11 = new javax.swing.JPanel();
         jLabel35 = new javax.swing.JLabel();
@@ -1972,16 +2679,20 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         provSet = new javax.swing.JList<>();
         jLabel2 = new javax.swing.JLabel();
         BTN_COMPILE = new javax.swing.JButton();
-        jLabel4 = new javax.swing.JLabel();
+        LB_VERSION = new javax.swing.JLabel();
         LB_LAST_COMMIT = new javax.swing.JLabel();
         BTN_COPY_FILE_INI = new javax.swing.JButton();
 
         jRadioButton1.setText("jRadioButton1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("TSDZ2 Parameter Configurator 5.1 for Open Source Firmware v20.1C.6");
         setResizable(false);
         setSize(new java.awt.Dimension(1192, 608));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
 
         jTabbedPane1.setPreferredSize(new java.awt.Dimension(894, 513));
 
@@ -1990,12 +2701,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
 
         Label_Parameter1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         Label_Parameter1.setForeground(new java.awt.Color(255, 0, 0));
-        Label_Parameter1.setText("Motor type (Volt)");
+        Label_Parameter1.setText("Motor type");
 
-        buttonGroup1.add(RB_MOTOR_36V);
-        RB_MOTOR_36V.setText("36");
-
-        CB_ASS_WITHOUT_PED.setText("Startup assist without pedaling");
+        CB_ASS_WITHOUT_PED.setText("Startup assist without pedaling tres.");
         CB_ASS_WITHOUT_PED.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 CB_ASS_WITHOUT_PEDStateChanged(evt);
@@ -2024,9 +2732,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_BOOST_CADENCE_STEP.setText("20");
         TF_BOOST_CADENCE_STEP.setToolTipText("<html>Max value 50<br>\nRecommended range 20 to 30<br>\n(high values short effect)\n</html>");
         TF_BOOST_CADENCE_STEP.setEnabled(CB_STARTUP_BOOST_ON_START.isSelected());
-
-        buttonGroup1.add(RB_MOTOR_48V);
-        RB_MOTOR_48V.setText("48");
 
         jLabelMotorFastStop.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabelMotorFastStop.setForeground(new java.awt.Color(255, 0, 0));
@@ -2068,9 +2773,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             }
         });
 
-        jLabel88.setText("Startup assist w/o pedaling threshold");
-        jLabel88.setInheritsPopupMenu(false);
-
         CB_SMOOTH_START_ENABLED.setText("Smooth start enabled");
         CB_SMOOTH_START_ENABLED.setToolTipText("<html>Used in Torque and Hybrid assist mode (disableable)<br>\nUsed inCadence assist mode (cannot be disabled)\n</html>\n");
         CB_SMOOTH_START_ENABLED.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -2104,6 +2806,21 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             }
         });
 
+        JCB_MOTOR_TYPE.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "TSDZ2 48V", "TSDZ2 36V", "TSDZ8" }));
+        JCB_MOTOR_TYPE.setToolTipText("");
+        JCB_MOTOR_TYPE.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                JCB_MOTOR_TYPEItemStateChanged(evt);
+            }
+        });
+
+        jLabel10.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(255, 0, 0));
+        jLabel10.setText("Motor power max (W)");
+
+        TF_BATT_POW_MAX.setText("500");
+        TF_BATT_POW_MAX.setToolTipText("<html>Motor power limit in offroad mode<br>\nMax value depends on the rated<br>\nmotor power and the battery capacity\n</html>");
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -2122,43 +2839,39 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                         .addComponent(TF_BOOST_TORQUE_FACTOR, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+                        .addComponent(CB_ASS_WITHOUT_PED, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(TF_ASS_WITHOUT_PED_THRES, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel6Layout.createSequentialGroup()
+                                .addComponent(Label_Parameter1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGap(39, 39, 39)
+                                .addComponent(JCB_MOTOR_TYPE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel6Layout.createSequentialGroup()
-                                .addComponent(CB_ASS_WITHOUT_PED, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGap(46, 46, 46))
-                            .addGroup(jPanel6Layout.createSequentialGroup()
-                                .addComponent(jLabel88, javax.swing.GroupLayout.PREFERRED_SIZE, 218, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(TF_ASS_WITHOUT_PED_THRES))
-                            .addGroup(jPanel6Layout.createSequentialGroup()
-                                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel6Layout.createSequentialGroup()
-                                        .addComponent(Label_Parameter1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(RB_MOTOR_36V, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(RB_MOTOR_48V, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(jPanel6Layout.createSequentialGroup()
-                                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jLabelMotorFastStop, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(jLabel92)
-                                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(TF_OVERCURRENT_DELAY)
-                                            .addComponent(TF_MOTOR_DEC)
-                                            .addComponent(TF_MOTOR_ACC, javax.swing.GroupLayout.DEFAULT_SIZE, 44, Short.MAX_VALUE))))
-                                .addGap(4, 4, 4)))
-                        .addGap(6, 6, 6))
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(jLabel58, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
-                        .addComponent(RB_PWM_18KHZ, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(RB_PWM_19KHZ, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabelMotorFastStop, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel92)
+                                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(TF_BATT_POW_MAX, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(TF_OVERCURRENT_DELAY, javax.swing.GroupLayout.DEFAULT_SIZE, 48, Short.MAX_VALUE)
+                                        .addComponent(TF_MOTOR_DEC, javax.swing.GroupLayout.DEFAULT_SIZE, 48, Short.MAX_VALUE)
+                                        .addComponent(TF_MOTOR_ACC, javax.swing.GroupLayout.DEFAULT_SIZE, 48, Short.MAX_VALUE)))))
                         .addGap(10, 10, 10))
                     .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel58, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(RB_PWM_18KHZ, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(RB_PWM_19KHZ, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(CB_STARTUP_BOOST_ON_START)
                             .addComponent(CB_SMOOTH_START_ENABLED)
                             .addComponent(jLabel7)
@@ -2183,10 +2896,13 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(RB_MOTOR_36V)
                     .addComponent(Label_Parameter1, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(RB_MOTOR_48V))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(JCB_MOTOR_TYPE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(TF_BATT_POW_MAX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(TF_MOTOR_ACC, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -2198,23 +2914,20 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(TF_OVERCURRENT_DELAY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel92))
-                .addGap(5, 5, 5)
-                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(RB_PWM_18KHZ)
-                        .addComponent(RB_PWM_19KHZ))
-                    .addComponent(jLabel58, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(7, 7, 7)
+                .addGap(4, 4, 4)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel58, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(RB_PWM_18KHZ)
+                    .addComponent(RB_PWM_19KHZ))
+                .addGap(8, 8, 8)
                 .addComponent(CB_FIELD_WEAKENING_ENABLED)
-                .addGap(7, 7, 7)
-                .addComponent(CB_ASS_WITHOUT_PED)
-                .addGap(2, 2, 2)
+                .addGap(5, 5, 5)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(TF_ASS_WITHOUT_PED_THRES, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel88))
-                .addGap(4, 4, 4)
+                    .addComponent(CB_ASS_WITHOUT_PED))
+                .addGap(5, 5, 5)
                 .addComponent(CB_STARTUP_BOOST_ON_START)
-                .addGap(6, 6, 6)
+                .addGap(5, 5, 5)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel20, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(TF_BOOST_TORQUE_FACTOR, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -2255,13 +2968,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_BAT_CUR_MAX.setText("17");
         TF_BAT_CUR_MAX.setToolTipText("<html>Max value<br>\n17 A for 36 V<br>\n12 A for 48 V\n</html>");
 
-        jLabel10.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        jLabel10.setForeground(new java.awt.Color(255, 0, 0));
-        jLabel10.setText("Motor power max (W)");
-
-        TF_BATT_POW_MAX.setText("500");
-        TF_BATT_POW_MAX.setToolTipText("<html>Motor power limit in offroad mode<br>\nMax value depends on the rated<br>\nmotor power and the battery capacity\n</html>");
-
         jLabel11.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabel11.setForeground(new java.awt.Color(255, 0, 0));
         jLabel11.setText("Battery cells number (series)");
@@ -2296,7 +3002,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel11, javax.swing.GroupLayout.DEFAULT_SIZE, 166, Short.MAX_VALUE)
                     .addComponent(jLabel21, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel18)
                         .addGap(0, 0, Short.MAX_VALUE))
@@ -2309,7 +3014,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                         .addComponent(TF_BAT_CUR_MAX, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(TF_BATT_NUM_CELLS, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(TF_BATT_POW_MAX, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(TF_BATT_CAPACITY, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -2327,10 +3031,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(TF_BAT_CUR_MAX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel9))
-                .addGap(5, 5, 5)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(TF_BATT_POW_MAX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(5, 5, 5)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(TF_BATT_CAPACITY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2372,7 +3072,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         Label_Parameter5.setText("Units type");
         Label_Parameter5.setFocusable(false);
 
-        JCB_DISPLAY_TYPE.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "VLCD5", "VLCD6", "XH18", "850C" }));
+        JCB_DISPLAY_TYPE.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "VLCD5", "VLCD6", "XH18", "850C", "EKD01" }));
         JCB_DISPLAY_TYPE.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 JCB_DISPLAY_TYPEItemStateChanged(evt);
@@ -2431,11 +3131,11 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                 .addComponent(jLabel16)
-                .addGap(1, 1, 1)
+                .addGap(5, 5, 5)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(Label_Parameter2, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(JCB_DISPLAY_TYPE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(3, 3, 3)
+                .addGap(5, 5, 5)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(Label_Parameter3)
                     .addComponent(RB_DISPLAY_WORK_ON)
@@ -2699,12 +3399,12 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap(13, Short.MAX_VALUE)
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
+                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 21, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -2715,7 +3415,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(10, 10, 10)
+                        .addGap(12, 12, 12)
                         .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
@@ -3115,11 +3815,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_WALK_ASS_TIME.setText("60");
         TF_WALK_ASS_TIME.setToolTipText("Max value 255 (0.1 s)\n\n");
         TF_WALK_ASS_TIME.setEnabled(((JCB_BRAKE_FEATURE.getSelectedIndex() == BRAKE_SENSOR) || (JCB_BRAKE_FEATURE.getSelectedIndex() == TEMPERATURE_SWITCH)) && CB_WALK_ASSIST_ENABLED.isSelected() && CB_WALK_TIME_ENA.isSelected());
-        TF_WALK_ASS_TIME.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                TF_WALK_ASS_TIMEActionPerformed(evt);
-            }
-        });
 
         jLabel68.setText("Walk assist deb. time");
 
@@ -3359,7 +4054,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel74)
                     .addComponent(TF_CRUISE_SPEED_ENA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 14, Short.MAX_VALUE))
         );
 
         jLabel76.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
@@ -3420,12 +4115,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             }
         });
 
-        jLabel67.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        jLabel67.setText("Assist levels 1/5 (%ECO)");
-
-        TF_ASS_LEVELS_1_OF_5.setText("60");
-        TF_ASS_LEVELS_1_OF_5.setToolTipText("");
-
         javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
         jPanel17.setLayout(jPanel17Layout);
         jPanel17Layout.setHorizontalGroup(
@@ -3436,7 +4125,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     .addComponent(jLabel76, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel17Layout.createSequentialGroup()
                         .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel67, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabelLights3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                 .addComponent(jLabelLights1, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3448,10 +4136,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                             .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(TF_LIGHT_MODE_1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(TF_LIGHT_MODE_2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(TF_ASS_LEVELS_1_OF_5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(TF_LIGHT_MODE_3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(TF_LIGHT_MODE_ON_START, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(12, 12, 12))))
+                        .addGap(10, 10, 10))))
         );
         jPanel17Layout.setVerticalGroup(
             jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3475,11 +4162,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelLights3, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(TF_LIGHT_MODE_3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel67, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(TF_ASS_LEVELS_1_OF_5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         jLabel17.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
@@ -3582,6 +4265,30 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addContainerGap(38, Short.MAX_VALUE))
         );
 
+        jLabel67.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        jLabel67.setText("Assist level 5 (%)");
+
+        TF_ASS_LEVELS_5_PERCENT.setText("60");
+        TF_ASS_LEVELS_5_PERCENT.setToolTipText("<html>Assist level 5<br>\nIf assist level 5 mode is before ECO, must be less than 100%<br>\npercentage of assistance level of ECO<br>\n<br>\nIf assist level 5 mode is after TURBO, must be greater than 100%<br>\npercentage of assistance level of TURBO\n</html>");
+        TF_ASS_LEVELS_5_PERCENT.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                TF_ASS_LEVELS_5_PERCENTFocusLost(evt);
+            }
+        });
+        TF_ASS_LEVELS_5_PERCENT.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                TF_ASS_LEVELS_5_PERCENTKeyReleased(evt);
+            }
+        });
+
+        JCB_ASSIST_LEVEL_5_MODE.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "DISABLED", "BEFORE ECO", "AFTER TURBO" }));
+        JCB_ASSIST_LEVEL_5_MODE.setToolTipText("<html>Assist level 5<br>\nDISABLED, if not available<br>\nBEFORE ECO, if the fifth level is before ECO<br>\nAFTER TURBO, if the fifth level is after TURBO\n</html>");
+        JCB_ASSIST_LEVEL_5_MODE.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                JCB_ASSIST_LEVEL_5_MODEItemStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -3594,15 +4301,25 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(44, Short.MAX_VALUE))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPanel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap(44, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel67, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(5, 5, 5)
+                        .addComponent(JCB_ASSIST_LEVEL_5_MODE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(TF_ASS_LEVELS_5_PERCENT, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(50, 50, 50))))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3616,14 +4333,20 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                             .addComponent(jPanel13, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel15, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(jPanel15, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(61, Short.MAX_VALUE))
+                        .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel67, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(JCB_ASSIST_LEVEL_5_MODE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(TF_ASS_LEVELS_5_PERCENT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(20, 67, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Assistance settings", jPanel4);
@@ -4027,13 +4750,13 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
 
         TF_TEMP_MIN_LIM.setText("65");
         TF_TEMP_MIN_LIM.setToolTipText("Max value 75 (°C)");
-        TF_TEMP_MIN_LIM.setEnabled((JCB_OPTIONAL_ADC.getSelectedIndex() == TEMPERATURE));
+        TF_TEMP_MIN_LIM.setEnabled((JCB_OPTIONAL_ADC.getSelectedIndex() == TEMPERATURE)||(JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8));
 
         jLabel105.setText("Motor temperature max limit (°C)");
 
         TF_TEMP_MAX_LIM.setText("85");
         TF_TEMP_MAX_LIM.setToolTipText("Max value 85 (°C)");
-        TF_TEMP_MAX_LIM.setEnabled((JCB_OPTIONAL_ADC.getSelectedIndex() == TEMPERATURE));
+        TF_TEMP_MAX_LIM.setEnabled((JCB_OPTIONAL_ADC.getSelectedIndex() == TEMPERATURE)||(JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8));
 
         TF_DELAY_MENU.setText("50");
         TF_DELAY_MENU.setToolTipText("Max value 60 (0.1 s)");
@@ -4342,7 +5065,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         jTabbedPane1.addTab("Advanced settings", jPanel8);
 
         label1.setFont(new java.awt.Font("Ebrima", 0, 24)); // NOI18N
-        label1.setText("TSDZ2 Parameter Configurator");
+        label1.setText("TSDZ2/8 Parameter Configurator");
 
         expSet.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -4368,7 +5091,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         BTN_COMPILE.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         BTN_COMPILE.setText("Compile & Flash");
 
-        jLabel4.setText("Version (last commits)");
+        LB_VERSION.setText("Version (last commits)");
 
         LB_LAST_COMMIT.setText("<html>Last commit</html>");
         LB_LAST_COMMIT.setVerticalAlignment(javax.swing.SwingConstants.TOP);
@@ -4396,7 +5119,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jLabel4)
+                        .addComponent(LB_VERSION)
                         .addComponent(jLabel1)
                         .addComponent(jScrollPane1)
                         .addComponent(jScrollPane2)
@@ -4412,7 +5135,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel4)
+                        .addComponent(LB_VERSION)
                         .addGap(4, 4, 4)
                         .addComponent(LB_LAST_COMMIT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -4887,9 +5610,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 break;
         }
 
-        TF_TEMP_MIN_LIM.setEnabled(boolOptionalAdcTemperature);
-        TF_TEMP_MAX_LIM.setEnabled(boolOptionalAdcTemperature);
-        CB_TEMP_ERR_MIN_LIM.setEnabled(boolOptionalAdcTemperature);
+        TF_TEMP_MIN_LIM.setEnabled(boolOptionalAdcTemperature||boolMotorTypeTSDZ8);
+        TF_TEMP_MAX_LIM.setEnabled(boolOptionalAdcTemperature||boolMotorTypeTSDZ8);
+        CB_TEMP_ERR_MIN_LIM.setEnabled(boolOptionalAdcTemperature||boolMotorTypeTSDZ8);
         JCB_TEMP_SENSOR_TYPE.setEnabled(boolOptionalAdcTemperature);
         
         if ((JCB_OPTIONAL_ADC.getSelectedIndex() == THROTTLE)&&((JCB_BRAKE_FEATURE.getSelectedIndex() == BRAKE_SENSOR)||(JCB_BRAKE_FEATURE.getSelectedIndex() == TEMPERATURE_SWITCH))) {
@@ -5060,6 +5783,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         boolDisplayTypeVLCD6 = false;
         boolDisplayTypeXH18 = false;
         boolDisplayType850C = false;
+        boolDisplayTypeEKD01 = false;
             
         switch (JCB_DISPLAY_TYPE.getSelectedIndex()) {
             case VLCD5:
@@ -5074,6 +5798,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             case C850:
                 boolDisplayType850C = true;
                 break;
+            case EKD01:
+                boolDisplayTypeEKD01 = true;
+                break;
             default:
                 break;
         }
@@ -5082,7 +5809,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             JCB_UNITS_TYPE.setSelectedIndex(ALTERNATIVE_MILES);
         }
         
-        if ((JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD5)||(JCB_DISPLAY_TYPE.getSelectedIndex() == C850)) {
+        if ((JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD5)||(JCB_DISPLAY_TYPE.getSelectedIndex() == C850)||(JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01)) {
             TF_BAT_CELL_5_6.setEnabled(true);
             TF_BAT_CELL_4_6.setEnabled(true);
             TF_BAT_CELL_3_6.setEnabled(true);
@@ -5250,7 +5977,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             JCB_UNITS_TYPE.setSelectedIndex(ALTERNATIVE_MILES);
         }
         
-        if ((JCB_UNITS_TYPE.getSelectedIndex() == KILOMETERS)) {
+        if (JCB_UNITS_TYPE.getSelectedIndex() == KILOMETERS) {
             jLabelMaxSpeed.setText("Max speed offroad mode (km/h)");
             jLabelStreetSpeed.setText("Street speed limit (km/h)");
             jLabelCruiseSpeedUnits.setText("km/h");
@@ -5288,10 +6015,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_JCB_UNITS_TYPEItemStateChanged
 
-    private void TF_WALK_ASS_TIMEActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TF_WALK_ASS_TIMEActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_TF_WALK_ASS_TIMEActionPerformed
-
     private void TF_OVERCURRENT_DELAYKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TF_OVERCURRENT_DELAYKeyReleased
         int value;
         value = Integer.parseInt(TF_OVERCURRENT_DELAY.getText());
@@ -5299,6 +6022,86 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             TF_OVERCURRENT_DELAY.setText("2");
         }
     }//GEN-LAST:event_TF_OVERCURRENT_DELAYKeyReleased
+
+    private void JCB_MOTOR_TYPEItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_JCB_MOTOR_TYPEItemStateChanged
+	boolMotorTypeTSDZ2_48V = false;
+        boolMotorTypeTSDZ2_36V = false;
+        boolMotorTypeTSDZ8 = false;
+            
+        switch (JCB_MOTOR_TYPE.getSelectedIndex()) {
+            case TSDZ2_48V:
+                boolMotorTypeTSDZ2_48V = true;
+                BTN_COMPILE.setText("Compile & Flash");
+                LB_VERSION.setText("<html>Version (last commits)</html>");
+                LB_LAST_COMMIT.setText("<html>" + strLastCommit + "</html>");
+                BTN_COMPILE.setEnabled(true);
+                break;
+            case TSDZ2_36V:
+                boolMotorTypeTSDZ2_36V = true;
+                BTN_COMPILE.setText("Compile & Flash");
+                LB_VERSION.setText("<html>Version (last commits)</html>");
+                LB_LAST_COMMIT.setText("<html>" + strLastCommit + "</html>");
+                BTN_COMPILE.setEnabled(true);
+                break;
+            case TSDZ8:
+                boolMotorTypeTSDZ8 = true;
+                BTN_COMPILE.setText("Compile HEX file");
+                LB_VERSION.setText("<html>Version (mstrens)</html>");
+                LB_LAST_COMMIT.setText("<html>Maim " + intTSDZ8headerArray[0] + " - Sub " + intTSDZ8headerArray[1] + "</html>");
+                BTN_COMPILE.setEnabled(boolTSDZ8headerRead);
+                if ((boolMotorTypeTSDZ8)&&(!boolTSDZ8headerRead)) {
+                    JOptionPane.showMessageDialog(null, (strTSDZ8other_settingsDirName + "/" + strTSDZ8headerFileName) + " file not found" , "TSDZ2 Patameter Configurator", JOptionPane.INFORMATION_MESSAGE);
+                }
+                break;
+            default:
+                break;
+        }
+        
+        TF_TEMP_MIN_LIM.setEnabled(boolOptionalAdcTemperature||boolMotorTypeTSDZ8);
+        TF_TEMP_MAX_LIM.setEnabled(boolOptionalAdcTemperature||boolMotorTypeTSDZ8);
+        CB_TEMP_ERR_MIN_LIM.setEnabled(boolOptionalAdcTemperature||boolMotorTypeTSDZ8);
+    }//GEN-LAST:event_JCB_MOTOR_TYPEItemStateChanged
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        if ((boolMotorTypeTSDZ8)&&(!boolTSDZ8headerRead)) {
+            JOptionPane.showMessageDialog(null, (strTSDZ8other_settingsDirName + "/" + strTSDZ8headerFileName) + " file not found" , "TSDZ2 Patameter Configurator", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }//GEN-LAST:event_formWindowOpened
+
+    private void JCB_ASSIST_LEVEL_5_MODEItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_JCB_ASSIST_LEVEL_5_MODEItemStateChanged
+        switch (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()) {
+            case BEFORE_ECO:
+                if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                    TF_ASS_LEVELS_5_PERCENT.setText("60");
+                }
+                intAssistLevel5 = BEFORE_ECO;
+                break;
+            case AFTER_TURBO:
+                if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) < 100) {
+                    TF_ASS_LEVELS_5_PERCENT.setText("130");
+                }
+                intAssistLevel5 = AFTER_TURBO;
+                break;
+            default:
+                break;
+        }
+    }//GEN-LAST:event_JCB_ASSIST_LEVEL_5_MODEItemStateChanged
+
+    private void TF_ASS_LEVELS_5_PERCENTFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_TF_ASS_LEVELS_5_PERCENTFocusLost
+        if (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex() == AFTER_TURBO) {
+            if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) < 100) {
+                TF_ASS_LEVELS_5_PERCENT.setText("130");
+            }
+        }
+    }//GEN-LAST:event_TF_ASS_LEVELS_5_PERCENTFocusLost
+
+    private void TF_ASS_LEVELS_5_PERCENTKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TF_ASS_LEVELS_5_PERCENTKeyReleased
+        if (JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex() == BEFORE_ECO) {
+                if ((Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText())) > 100) {
+                    TF_ASS_LEVELS_5_PERCENT.setText("60");
+                }
+        }
+    }//GEN-LAST:event_TF_ASS_LEVELS_5_PERCENTKeyReleased
 
     /*
      * @param args the command line arguments
@@ -5361,10 +6164,12 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JCheckBox CB_TOR_SENSOR_ADV;
     private javax.swing.JCheckBox CB_WALK_ASSIST_ENABLED;
     private javax.swing.JCheckBox CB_WALK_TIME_ENA;
+    private javax.swing.JComboBox<String> JCB_ASSIST_LEVEL_5_MODE;
     private javax.swing.JComboBox<String> JCB_ASSIST_MODE_ON_STARTUP;
     private javax.swing.JComboBox<String> JCB_BRAKE_FEATURE;
     private javax.swing.JComboBox<String> JCB_DATA_ON_STARTUP;
     private javax.swing.JComboBox<String> JCB_DISPLAY_TYPE;
+    private javax.swing.JComboBox<String> JCB_MOTOR_TYPE;
     private javax.swing.JComboBox<String> JCB_OPTIONAL_ADC;
     private javax.swing.JComboBox<String> JCB_SOC_CALC;
     private javax.swing.JComboBox<String> JCB_TEMP_SENSOR_TYPE;
@@ -5372,6 +6177,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> JCB_THROTTLE_MODE_STREET;
     private javax.swing.JComboBox<String> JCB_UNITS_TYPE;
     private javax.swing.JLabel LB_LAST_COMMIT;
+    private javax.swing.JLabel LB_VERSION;
     private javax.swing.JLabel Label_Parameter1;
     private javax.swing.JLabel Label_Parameter2;
     private javax.swing.JLabel Label_Parameter3;
@@ -5380,8 +6186,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JRadioButton RB_BOOST_AT_ZERO_SPEED;
     private javax.swing.JRadioButton RB_DISPLAY_ALWAY_ON;
     private javax.swing.JRadioButton RB_DISPLAY_WORK_ON;
-    private javax.swing.JRadioButton RB_MOTOR_36V;
-    private javax.swing.JRadioButton RB_MOTOR_48V;
     private javax.swing.JRadioButton RB_PWM_18KHZ;
     private javax.swing.JRadioButton RB_PWM_19KHZ;
     private javax.swing.JRadioButton RB_eMTB_POWER;
@@ -5390,7 +6194,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JTextField TF_ADC_THROTTLE_MIN;
     private javax.swing.JTextField TF_ASSIST_THROTTLE_MAX;
     private javax.swing.JTextField TF_ASSIST_THROTTLE_MIN;
-    private javax.swing.JTextField TF_ASS_LEVELS_1_OF_5;
+    private javax.swing.JTextField TF_ASS_LEVELS_5_PERCENT;
     private javax.swing.JTextField TF_ASS_WITHOUT_PED_THRES;
     private javax.swing.JTextField TF_BATT_CAPACITY;
     private javax.swing.JTextField TF_BATT_CAPACITY_CAL;
@@ -5529,7 +6333,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel37;
     private javax.swing.JLabel jLabel38;
     private javax.swing.JLabel jLabel39;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel40;
     private javax.swing.JLabel jLabel41;
     private javax.swing.JLabel jLabel42;
@@ -5578,7 +6381,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel85;
     private javax.swing.JLabel jLabel86;
     private javax.swing.JLabel jLabel87;
-    private javax.swing.JLabel jLabel88;
     private javax.swing.JLabel jLabel89;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel jLabel90;
