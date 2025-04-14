@@ -2044,14 +2044,17 @@ static void uart_receive_package(void)
 	uint8_t ui8_assist_level_mask;
 	static uint8_t no_rx_counter = 0;
 	static uint8_t ui8_lights_counter = 0;
-	static uint8_t ui8_walk_assist_debounce_flag = 0;
-	static uint8_t ui8_walk_assist_debounce_counter = 0;
 	static uint8_t ui8_walk_assist_button_pressed = 0;
 	
-	// increment the comms safety counter
-    no_rx_counter++;
+#if WALK_ASSIST_DEBOUNCE_ENABLED && ENABLE_BRAKE_SENSOR
+	static uint8_t ui8_walk_assist_debounce_flag = 0;
+	static uint8_t ui8_walk_assist_debounce_counter = 0;
+	
 	// increment walk assist counter
 	ui8_walk_assist_debounce_counter++;
+#endif
+	// increment the comms safety counter
+    no_rx_counter++;
 	// increment lights_counter
 	ui8_lights_counter++;
 	// increment display menu counter
@@ -2628,7 +2631,7 @@ static void uart_receive_package(void)
 						// reset walk assist flag
 						ui8_walk_assist_flag = 0;
 						// reset walk assist debounce flag
-						ui8_walk_assist_debounce_flag = 0;
+						//ui8_walk_assist_debounce_flag = 0;
 						// reset walk assist speed flag
 						ui8_walk_assist_speed_flag = 0;
 	#endif
