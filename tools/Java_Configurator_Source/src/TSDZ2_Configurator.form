@@ -1229,6 +1229,9 @@
                       <Connection code="CB_TORQUE_CALIBRATION.isSelected()" type="code"/>
                     </Property>
                   </Properties>
+                  <Events>
+                    <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="TF_TORQ_PER_ADC_STEP_ADVKeyReleased"/>
+                  </Events>
                 </Component>
                 <Component class="javax.swing.JTextField" name="TF_TORQ_ADC_ANGLE_ADJ">
                   <Properties>
@@ -3888,7 +3891,7 @@
             </Component>
             <Component class="javax.swing.JTextField" name="TF_MOTOR_BLOCK_TIME">
               <Properties>
-                <Property name="text" type="java.lang.String" value="2"/>
+                <Property name="text" type="java.lang.String" value="10"/>
                 <Property name="toolTipText" type="java.lang.String" value="Value 1 to 10 (0.1 s)"/>
               </Properties>
             </Component>

@@ -193,6 +193,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public static final int TMP36 = 1;
     public static final int EMTB_ASSIST_MIN = 21;
     
+    public static final int DEFAULT_VALUE_ADC_STEP_ADV = 34;
     public static final int WEIGHT_ON_PEDAL = 25; // kg
     public static final int MIDDLE_OFFSET_ADJ = 20;
     public static final int OFFSET_MAX_VALUE = 34; // MIDDLE_OFFSET_ADJ * 2 - 6 (ADC_TORQUE_SENSOR_CALIBRATION_OFFSET)
@@ -723,7 +724,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public TSDZ2_Configurator() {
         initComponents();
         
-        this.setTitle("Parameter Configurator 5.3 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
+        this.setTitle("Parameter Configurator 5.4 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
         this.setLocationRelativeTo(null);
 
         // update lists
@@ -3229,6 +3230,11 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_TORQ_PER_ADC_STEP_ADV.setText("34");
         TF_TORQ_PER_ADC_STEP_ADV.setToolTipText("<html>\nDefault value 34<br>\nOptional calibration\n</html>");
         TF_TORQ_PER_ADC_STEP_ADV.setEnabled(CB_TORQUE_CALIBRATION.isSelected());
+        TF_TORQ_PER_ADC_STEP_ADV.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                TF_TORQ_PER_ADC_STEP_ADVKeyReleased(evt);
+            }
+        });
 
         TF_TORQ_ADC_ANGLE_ADJ.setText("0");
         TF_TORQ_ADC_ANGLE_ADJ.setToolTipText("<html>\nValue -20 to 20<br>\nDefault 0\n</html>");
@@ -4982,7 +4988,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
 
         jLabelTF_MOTOR_BLOCK_TIME.setText("Motor blocked error - threshold time");
 
-        TF_MOTOR_BLOCK_TIME.setText("2");
+        TF_MOTOR_BLOCK_TIME.setText("10");
         TF_MOTOR_BLOCK_TIME.setToolTipText("Value 1 to 10 (0.1 s)");
 
         jLabelTHROTTLE_ASSIST_MIN.setText("Throttle assist value   min");
@@ -5493,6 +5499,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             intTorqueAdcMax = Integer.parseInt(TF_TORQUE_ADC_MAX.getText());
             intTorqueAdcOnWeight = intTorqueAdcOffset + ((intTorqueAdcMax - intTorqueAdcOffset) * 75) / 100;
             intTorqueAdcStepCalc = (WEIGHT_ON_PEDAL * 167) / (intTorqueAdcOnWeight - intTorqueAdcOffset);
+            intTorqueAdcStepCalc = (intTorqueAdcStepCalc * Integer.parseInt(TF_TORQ_PER_ADC_STEP_ADV.getText())) / DEFAULT_VALUE_ADC_STEP_ADV;
             TF_TORQ_PER_ADC_STEP.setText(String.valueOf(intTorqueAdcStepCalc));
         }
     }//GEN-LAST:event_TF_TORQ_ADC_OFFSETKeyReleased
@@ -5505,6 +5512,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             intTorqueAdcMax = Integer.parseInt(TF_TORQUE_ADC_MAX.getText());
             intTorqueAdcOnWeight = intTorqueAdcOffset + ((intTorqueAdcMax - intTorqueAdcOffset) * 75) / 100;
             intTorqueAdcStepCalc = (WEIGHT_ON_PEDAL * 167) / (intTorqueAdcOnWeight - intTorqueAdcOffset);
+            intTorqueAdcStepCalc = (intTorqueAdcStepCalc * Integer.parseInt(TF_TORQ_PER_ADC_STEP_ADV.getText())) / DEFAULT_VALUE_ADC_STEP_ADV;
             TF_TORQ_PER_ADC_STEP.setText(String.valueOf(intTorqueAdcStepCalc));
         }
         else {
@@ -5518,6 +5526,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             intTorqueAdcMax = Integer.parseInt(TF_TORQUE_ADC_MAX.getText());
             intTorqueAdcOnWeight = intTorqueAdcOffset + ((intTorqueAdcMax - intTorqueAdcOffset) * 75) / 100;
             intTorqueAdcStepCalc = (WEIGHT_ON_PEDAL * 167) / (intTorqueAdcOnWeight - intTorqueAdcOffset);
+            intTorqueAdcStepCalc = (intTorqueAdcStepCalc * Integer.parseInt(TF_TORQ_PER_ADC_STEP_ADV.getText())) / DEFAULT_VALUE_ADC_STEP_ADV;
             TF_TORQ_PER_ADC_STEP.setText(String.valueOf(intTorqueAdcStepCalc));
         }
     }//GEN-LAST:event_TF_TORQUE_ADC_MAXKeyReleased
@@ -6102,6 +6111,17 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 }
         }
     }//GEN-LAST:event_TF_ASS_LEVELS_5_PERCENTKeyReleased
+
+    private void TF_TORQ_PER_ADC_STEP_ADVKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TF_TORQ_PER_ADC_STEP_ADVKeyReleased
+        if(CB_ADC_STEP_ESTIM.isSelected()) {
+            intTorqueAdcOffset = Integer.parseInt(TF_TORQ_ADC_OFFSET.getText());
+            intTorqueAdcMax = Integer.parseInt(TF_TORQUE_ADC_MAX.getText());
+            intTorqueAdcOnWeight = intTorqueAdcOffset + ((intTorqueAdcMax - intTorqueAdcOffset) * 75) / 100;
+            intTorqueAdcStepCalc = (WEIGHT_ON_PEDAL * 167) / (intTorqueAdcOnWeight - intTorqueAdcOffset);
+            intTorqueAdcStepCalc = (intTorqueAdcStepCalc * Integer.parseInt(TF_TORQ_PER_ADC_STEP_ADV.getText())) / DEFAULT_VALUE_ADC_STEP_ADV;
+            TF_TORQ_PER_ADC_STEP.setText(String.valueOf(intTorqueAdcStepCalc));
+        }
+    }//GEN-LAST:event_TF_TORQ_PER_ADC_STEP_ADVKeyReleased
 
     /*
      * @param args the command line arguments

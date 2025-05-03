@@ -1,15 +1,24 @@
-TSDZ2 Open Source Firmware v20.1C.6
+TSDZ2 Open Source Firmware
 for stock displays XH18 - VLCD5 - VLCD6
+
+List of changes v20.1C.6-update-1
+  1 - Added TSDZ8 to the configurator (for mstrens version).
+  2 - Fixed motor phase current bug.
+  3 - Added EKD01 display.
+  4 - Fifth level choice, before ECO or after TURBO.
+  5 - Fixed issues with parameter setting and data display.
+  7 - Improved automatic and manual SOC reset.
+  6 - Improved torque sensor calibration procedure.
+  9 - Added delay to E02 error (torque).
 
 List of changes v20.1C.6
   1 - Added PWM frequency choice, 18kHz or 19kHz.
-  2 - Added overcurrent error delay (E07).
-  3 - Fixed bugs in SOC auto calculation.
-  4 - Increased motor blocked check time (E04).
-  5 - Increased minimum rpm for motor reactivation (by dzid26).
-  6 - All errors are reset only by turning the display off.
-  7 - Optimizations (by dzid26).
-  8 - Bleeding edge Unit Testing (by dzid26).
+  2 - Increased motor blocked check time (E04).
+  3 - Added overcurrent error delay in configurator (E07).
+  4 - Increased minimum rpm for motor reactivation (by dzid26).
+  5 - All errors are reset only by turning the display off.
+  6 - Optimizations (by dzid26).
+  7 - Bleeding edge Unit Testing (by dzid26).
 
 List of changes v20.1C.6-beta-1
   1 - Moved ERROR MOTOR CHECK to E09, shared with ERROR WRITE EEPROM.

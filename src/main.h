@@ -80,7 +80,7 @@
 #define PWM_DUTY_CYCLE_RAMP_DOWN_INVERSE_STEP_MIN			(uint8_t)(PWM_CYCLES_SECOND/1953)
 #define CRUISE_DUTY_CYCLE_RAMP_UP_INVERSE_STEP				(uint8_t)(PWM_CYCLES_SECOND/78)
 #define WALK_ASSIST_DUTY_CYCLE_RAMP_UP_INVERSE_STEP			(uint8_t)(PWM_CYCLES_SECOND/78)
-#define THROTTLE_DUTY_CYCLE_RAMP_UP_INVERSE_STEP_DEFAULT	(uint8_t)(PWM_CYCLES_SECOND/78)
+#define THROTTLE_DUTY_CYCLE_RAMP_UP_INVERSE_STEP_DEFAULT	(uint8_t)(PWM_CYCLES_SECOND/116)
 #define THROTTLE_DUTY_CYCLE_RAMP_UP_INVERSE_STEP_MIN		(uint8_t)(PWM_CYCLES_SECOND/390)
 
 #define MOTOR_OVER_SPEED_ERPS								((PWM_CYCLES_SECOND/29) < 650 ?  (PWM_CYCLES_SECOND/29) : 650) // motor max speed | 29 points for the sinewave at max speed (less than PWM_CYCLES_SECOND/29)
@@ -283,7 +283,7 @@ HALL_COUNTER_OFFSET_UP:    29 -> 44
 #define RX_STX										0x59
 
 // parameters for display data
-#if UNITS_TYPE          // 1 mph and miles
+#if UNITS_TYPE          // 1 = mph and miles
 #define OEM_WHEEL_FACTOR							900
 #else                   // 0 = km/h and kilometer
 #define OEM_WHEEL_FACTOR							1435
@@ -291,9 +291,6 @@ HALL_COUNTER_OFFSET_UP:    29 -> 44
 #define MILES										1
 
 #define DATA_INDEX_ARRAY_DIM						6
-
-// delay lights function (0.1 sec)
-#define DELAY_LIGHTS_ON					 	DELAY_MENU_ON
 
 // delay function status (0.1 sec)
 #define DELAY_FUNCTION_STATUS			(uint8_t) (DELAY_MENU_ON / 2)
@@ -484,7 +481,5 @@ HALL_COUNTER_OFFSET_UP:    29 -> 44
 #define ZERO_ODOMETER_COMPENSATION				100000000
 
 #define ASSISTANCE_WITH_ERROR_ENABLED			0
-
-#define AVAIABLE_FOR_FUTURE_USE					0 // EEPROM
 
 #endif // MAIN_H_

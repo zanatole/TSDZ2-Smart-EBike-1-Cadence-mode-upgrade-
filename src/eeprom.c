@@ -22,9 +22,9 @@ static const uint8_t ui8_default_array[EEPROM_BYTES_STORED] =
   WHEEL_PERIMETER_0,							// 4 + EEPROM_BASE_ADDRESS
   WHEEL_PERIMETER_1,							// 5 + EEPROM_BASE_ADDRESS
   WHEEL_MAX_SPEED,								// 6 + EEPROM_BASE_ADDRESS
-  MOTOR_TYPE,									// 7 + EEPROM_BASE_ADDRESS
-  AVAIABLE_FOR_FUTURE_USE,						// 8 + EEPROM_BASE_ADDRESS
   // for oem display
+  TORQUE_SENSOR_ESTIMATED,						// 7 + EEPROM_BASE_ADDRESS
+  PEDAL_TORQUE_PER_10_BIT_ADC_STEP_X100,		// 8 + EEPROM_BASE_ADDRESS
   MOTOR_ASSISTANCE_WITHOUT_PEDAL_ROTATION,		// 9 + EEPROM_BASE_ADDRESS
   ASSISTANCE_WITH_ERROR_ENABLED,				// 10 + EEPROM_BASE_ADDRESS
   BATTERY_SOC,									// 11 + EEPROM_BASE_ADDRESS
@@ -152,9 +152,9 @@ void EEPROM_controller(uint8_t ui8_operation, uint8_t ui8_byte_init)
 
       p_configuration_variables->ui8_wheel_speed_max = FLASH_ReadByte(ADDRESS_WHEEL_SPEED_MAX);
 
-      p_configuration_variables->ui8_motor_type = FLASH_ReadByte(ADDRESS_MOTOR_TYPE);
+      p_configuration_variables->ui8_torque_sensor_estimated = FLASH_ReadByte(ADDRESS_TORQUE_SENSOR_ESTIMATED);
       
-      p_configuration_variables->ui8_avaiable_for_future_use = FLASH_ReadByte(ADDRESS_AVAIABLE_FOR_FUTURE_USE);
+      p_configuration_variables->ui8_pedal_torque_per_10_bit_ADC_step_est_x100 = FLASH_ReadByte(ADDRESS_PEDAL_TORQUE_PER_10_BIT_ADC_STEP_X100);
       // for oem display
 	  p_configuration_variables->ui8_assist_without_pedal_rotation_enabled = FLASH_ReadByte(ADDRESS_MOTOR_ASSISTANCE_WITHOUT_PEDAL_ROTATION);
 	 
@@ -191,9 +191,9 @@ void EEPROM_controller(uint8_t ui8_operation, uint8_t ui8_byte_init)
       
       ui8_array[ADDRESS_WHEEL_SPEED_MAX - EEPROM_BASE_ADDRESS] = p_configuration_variables->ui8_wheel_speed_max;
       
-      ui8_array[ADDRESS_MOTOR_TYPE - EEPROM_BASE_ADDRESS] = p_configuration_variables->ui8_motor_type;
+      ui8_array[ADDRESS_TORQUE_SENSOR_ESTIMATED - EEPROM_BASE_ADDRESS] = p_configuration_variables->ui8_torque_sensor_estimated;
       
-      ui8_array[ADDRESS_AVAIABLE_FOR_FUTURE_USE - EEPROM_BASE_ADDRESS] = p_configuration_variables->ui8_avaiable_for_future_use;
+      ui8_array[ADDRESS_PEDAL_TORQUE_PER_10_BIT_ADC_STEP_X100 - EEPROM_BASE_ADDRESS] = p_configuration_variables->ui8_pedal_torque_per_10_bit_ADC_step_est_x100;
       // for oem display
 	  ui8_array[ADDRESS_MOTOR_ASSISTANCE_WITHOUT_PEDAL_ROTATION - EEPROM_BASE_ADDRESS] = p_configuration_variables->ui8_assist_without_pedal_rotation_enabled;
 	  
