@@ -724,7 +724,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public TSDZ2_Configurator() {
         initComponents();
         
-        this.setTitle("Parameter Configurator 5.4 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
+        this.setTitle("Parameter Configurator 5.5 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
         this.setLocationRelativeTo(null);
 
         // update lists
@@ -1058,19 +1058,20 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                      mWriter.println(mstrensHexLine(Integer.parseInt(TF_TEMP_MIN_LIM.getText()))); // 84 MOTOR_TEMPERATURE_MIN_VALUE_LIMIT
                      mWriter.println(mstrensHexLine(Integer.parseInt(TF_TEMP_MAX_LIM.getText()))); // 86 MOTOR_TEMPERATURE_MAX_VALUE_LIMIT
                      
-                     if (CB_TEMP_ERR_MIN_LIM.isSelected()) {         // 8A ENABLE_TEMPERATURE_ERROR_MIN_LIMIT 1
+                     if (CB_TEMP_ERR_MIN_LIM.isSelected()) {         // 88 ENABLE_TEMPERATURE_ERROR_MIN_LIMIT 1
                          mWriter.println(mstrensHexLine(1));
                      }
-                     else {                                          // 8A ENABLE_TEMPERATURE_ERROR_MIN_LIMIT 0
+                     else {                                          // 88 ENABLE_TEMPERATURE_ERROR_MIN_LIMIT 0
                          mWriter.println(mstrensHexLine(0));
                      }
                      
-                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD6) { //  8C ENABLE_VLCD6 1
+                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD6) { //  8A ENABLE_VLCD6 1
                          mWriter.println(mstrensHexLine(1));
                      }
-                     else {                                              //  8C ENABLE_VLCD6 0
+                     else {                                              //  8A ENABLE_VLCD6 0
                          mWriter.println(mstrensHexLine(0));
                      }
+                     
                      if (JCB_DISPLAY_TYPE.getSelectedIndex() == VLCD5) { // 8C ENABLE_VLCD5 1
                          mWriter.println(mstrensHexLine(1));
                      }
@@ -1247,102 +1248,109 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                          mWriter.println(mstrensHexLine(2));
                      }
                      
-                     if (RB_BOOST_AT_ZERO_CADENCE.isSelected()) { // 10C STARTUP_BOOST_AT_ZERO 0
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     if (RB_BOOST_AT_ZERO_SPEED.isSelected()) {  // 10C STARTUP_BOOST_AT_ZERO 1
-                         mWriter.println(mstrensHexLine(1));
-                     }
-                         
-                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == C850) { // 10E ENABLE_850C 1
-                         mWriter.println(mstrensHexLine(1));
-                     }
-                     else {                                             //  10E ENABLE_850C 0
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     
-                     // not used
-                     if ((JCB_OPTIONAL_ADC.getSelectedIndex() == THROTTLE)&&(JCB_THROTTLE_MODE_STREET.getSelectedIndex() == PEDALING)) {
-                         mWriter.println(mstrensHexLine(1));  // 110 STREET_MODE_THROTTLE_LEGAL 1
-                     }
-                     else {
-                         mWriter.println(mstrensHexLine(0));   // 110 STREET_MODE_THROTTLE_LEGAL 0
-                     }
-                     
-                     if (JCB_BRAKE_FEATURE.getSelectedIndex() == TEMPERATURE_SWITCH) { //  112 BRAKE_TEMPERATURE_SWITCH 1";
-                         mWriter.println(mstrensHexLine(1));
-                     }
-                     else {                                                            //  112 BRAKE_TEMPERATURE_SWITCH 0";
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     
-                     
-                     if (RB_eMTB_POWER.isSelected()) {                 // 114 eMTB_BASED_ON_POWER 1
-                         mWriter.println(mstrensHexLine(1));
-                     }
-                     if (RB_eMTB_TORQUE.isSelected()) {                // 114 eMTB_BASED_ON_POWER 0
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     
-                     if (CB_SMOOTH_START_ENABLED.isSelected()) {       // 116 SMOOTH_START_ENABLED 1
-                         mWriter.println(mstrensHexLine(1));
-                     }
-                     else {                                            // 116 SMOOTH_START_ENABLED 0
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     
-                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_SMOOTH_START_RAMP.getText()))); // 118 SMOOTH_START_SET_PERCENT
-                     
-                     if (JCB_TEMP_SENSOR_TYPE.getSelectedIndex() == LM35) { // 11A TEMPERATURE_SENSOR_TYPE 0
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     else {                                                 // 11A TEMPERATURE_SENSOR_TYPE 1
-                         mWriter.println(mstrensHexLine(1));
-                     }
-                     
-                     if (CB_CRUISE_ENABLED.isSelected()) {                  // 11C CRUISE_MODE_ENABLED 1
-                         mWriter.println(mstrensHexLine(1));
-                     }
-                     else {                                                 // 11C CRUISE_MODE_ENABLED 0
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     
-                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE.getSelectedIndex())))); // 11E THROTTLE_MODE
-                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE_STREET.getSelectedIndex())))); // 120 STREET_MODE_THROTTLE_MODE
-                     
-                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText()))); // 122 ASSIST_LEVEL_5_PERCENT
-                     
-                     if ((JCB_UNITS_TYPE.getSelectedIndex() == ALTERNATIVE_MILES)||((JCB_UNITS_TYPE.getSelectedIndex() == MILES)&&(boolDisplayTypeVLCD6))) {
-                         mWriter.println(mstrensHexLine(1)); // 124 ALTERNATIVE_MILES 1
-                     }
-                     else {                                        // 124 ALTERNATIVE_MILES 0
-                         mWriter.println(mstrensHexLine(0));
-                     }
-                     
-                     if (RB_PWM_18KHZ.isSelected()) {              // 126 PWM_FREQ 18
-                         mWriter.println(mstrensHexLine(18));
-                     }
-                     if (RB_PWM_19KHZ.isSelected()) {              // 126 PWM_FREQ 19
-                         mWriter.println(mstrensHexLine(19));
-                     }
-                     
-                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_OVERCURRENT_DELAY.getText()))); // 128 OVERCURRENT_DELAY
-                     
-                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {      // 12A MOTOR_Type
+                     if (CB_ADC_STEP_ESTIM.isSelected()) { // 10C CB_ADC_STEP_ESTIM (added 2025/06/18)
                         mWriter.println(mstrensHexLine(1));
                      }
                      else {
                         mWriter.println(mstrensHexLine(0));
                      }
                      
-                    if (JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01) {     // 12B ENABLE_EKD01
+                     if (RB_BOOST_AT_ZERO_CADENCE.isSelected()) { // 10E STARTUP_BOOST_AT_ZERO 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     if (RB_BOOST_AT_ZERO_SPEED.isSelected()) {  // 10E STARTUP_BOOST_AT_ZERO 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                         
+                     if (JCB_DISPLAY_TYPE.getSelectedIndex() == C850) { // 110 ENABLE_850C 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                             //  110 ENABLE_850C 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     // not used
+                     if ((JCB_OPTIONAL_ADC.getSelectedIndex() == THROTTLE)&&(JCB_THROTTLE_MODE_STREET.getSelectedIndex() == PEDALING)) {
+                         mWriter.println(mstrensHexLine(1));  // 112 STREET_MODE_THROTTLE_LEGAL 1
+                     }
+                     else {
+                         mWriter.println(mstrensHexLine(0));   // 112 STREET_MODE_THROTTLE_LEGAL 0
+                     }
+                     
+                     if (JCB_BRAKE_FEATURE.getSelectedIndex() == TEMPERATURE_SWITCH) { //  114 BRAKE_TEMPERATURE_SWITCH 1";
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                            //  114 BRAKE_TEMPERATURE_SWITCH 0";
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     
+                     if (RB_eMTB_POWER.isSelected()) {                 // 116 eMTB_BASED_ON_POWER 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     if (RB_eMTB_TORQUE.isSelected()) {                // 116 eMTB_BASED_ON_POWER 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (CB_SMOOTH_START_ENABLED.isSelected()) {       // 118 SMOOTH_START_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                            // 118 SMOOTH_START_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_SMOOTH_START_RAMP.getText()))); // 11A SMOOTH_START_SET_PERCENT
+                     
+                     if (JCB_TEMP_SENSOR_TYPE.getSelectedIndex() == LM35) { // 11C TEMPERATURE_SENSOR_TYPE 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     else {                                                 // 11C TEMPERATURE_SENSOR_TYPE 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     
+                     if (CB_CRUISE_ENABLED.isSelected()) {                  // 11E CRUISE_MODE_ENABLED 1
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                 // 11E CRUISE_MODE_ENABLED 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE.getSelectedIndex())))); // 120 THROTTLE_MODE
+                     mWriter.println(mstrensHexLine(Integer.parseInt(String.valueOf(JCB_THROTTLE_MODE_STREET.getSelectedIndex())))); // 122 STREET_MODE_THROTTLE_MODE
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_ASS_LEVELS_5_PERCENT.getText()))); // 124 ASSIST_LEVEL_5_PERCENT
+                     
+                     if ((JCB_UNITS_TYPE.getSelectedIndex() == ALTERNATIVE_MILES)||((JCB_UNITS_TYPE.getSelectedIndex() == MILES)&&(boolDisplayTypeVLCD6))) {
+                         mWriter.println(mstrensHexLine(1)); // 126 ALTERNATIVE_MILES 1
+                     }
+                     else {                                        // 126 ALTERNATIVE_MILES 0
+                         mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                     if (RB_PWM_18KHZ.isSelected()) {              // 128 PWM_FREQ 18
+                         mWriter.println(mstrensHexLine(18));
+                     }
+                     if (RB_PWM_19KHZ.isSelected()) {              // 128 PWM_FREQ 19
+                         mWriter.println(mstrensHexLine(19));
+                     }
+                     
+                     mWriter.println(mstrensHexLine(Integer.parseInt(TF_OVERCURRENT_DELAY.getText()))); // 12A OVERCURRENT_DELAY
+                     
+                     if (JCB_MOTOR_TYPE.getSelectedIndex() == TSDZ8) {      // 12C MOTOR_Type
+                        mWriter.println(mstrensHexLine(1));
+                     }
+                     else {
+                        mWriter.println(mstrensHexLine(0));
+                     }
+                     
+                    if (JCB_DISPLAY_TYPE.getSelectedIndex() == EKD01) {     // 12E ENABLE_EKD01
                          mWriter.println(mstrensHexLine(1));
                      }
                     else {
                         mWriter.println(mstrensHexLine(0));
                     }
                     
-                    mWriter.println(mstrensHexLine(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()));     // 12C 0=DISABLED 1=BEFORE_ECO 2=AFTER_TURBO
+                    mWriter.println(mstrensHexLine(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()));     // 130 0=DISABLED 1=BEFORE_ECO 2=AFTER_TURBO
                     
                      mWriter.println(":00000001FF");   // End of hex file
                  } catch (IOException ioe) {
@@ -2967,7 +2975,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         jLabel9.setText("Battery current max (A)");
 
         TF_BAT_CUR_MAX.setText("17");
-        TF_BAT_CUR_MAX.setToolTipText("<html>Max value<br>\n17 A for 36 V<br>\n12 A for 48 V\n</html>");
+        TF_BAT_CUR_MAX.setToolTipText("<html>Max value<br>\n16 A for TSDZ2 36 V<br>\n12 A for TSDZ2 48 V<br>\n23 A for TSDZ8\n</html>");
 
         jLabel11.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabel11.setForeground(new java.awt.Color(255, 0, 0));
@@ -3196,7 +3204,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_TORQ_PER_ADC_STEP.setEnabled(!CB_ADC_STEP_ESTIM.isSelected());
 
         TF_TORQUE_ADC_MAX.setText("300");
-        TF_TORQUE_ADC_MAX.setToolTipText("<html>\nInsert value read on calibration<br>\nMax 500\n</html>");
+        TF_TORQUE_ADC_MAX.setToolTipText("<html>\nInsert value read on calibration<br>\nMax 500 for TSDZ2, 650 for TSDZ8\n</html>");
         TF_TORQUE_ADC_MAX.setEnabled(CB_TORQUE_CALIBRATION.isSelected());
         TF_TORQUE_ADC_MAX.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
