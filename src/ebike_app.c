@@ -312,6 +312,12 @@ void ebike_app_init(void)
                 (uint8_t) 100,
                 (uint8_t) 255,
                 (uint8_t) SMOOTH_START_RAMP_MIN);
+#if COASTER_BRAKE_ENABLED
+	if (ui8_smooth_start_counter_set < SMOOTH_START_RAMP_DEFAULT) {
+		ui8_smooth_start_counter_set = SMOOTH_START_RAMP_DEFAULT;
+	}
+#endif
+	ui8_smooth_start_counter_set_temp = ui8_smooth_start_counter_set;
 	
 	// set pedal torque per 10_bit ADC step x100 default (estimated)
 	if (m_configuration_variables.ui8_torque_sensor_estimated) {
@@ -844,7 +850,7 @@ static void apply_cadence_assist(void)
 {
     if (ui8_pedal_cadence_RPM > 0U) {
 		// simulated pedal torque delta
-		ui16_adc_pedal_torque_delta = ((uint16_t)ui8_riding_mode_parameter + (uint16_t)ui8_pedal_cadence_RPM) >> 2;
+		ui16_adc_pedal_torque_delta = (uint16_t)ui8_riding_mode_parameter + (uint16_t)ui8_pedal_cadence_RPM;
 		
 		// smooth start
 		if (ui8_smooth_start_counter_set < SMOOTH_START_RAMP_DEFAULT) {
@@ -852,8 +858,13 @@ static void apply_cadence_assist(void)
 		}
 		apply_smooth_start();
 		ui8_smooth_start_counter_set = ui8_smooth_start_counter_set_temp;
-        // set cadence assist current target
-		uint16_t ui16_adc_battery_current_target_cadence_assist = ui16_adc_pedal_torque_delta;
+        		
+		// set cadence assist current target x100
+		uint32_t ui32_current_target_cadence_assist_x100 = (uint32_t)(ui16_adc_pedal_torque_delta * 200000) // *2*100*1000
+			/ ui16_battery_voltage_filtered_x1000;
+	
+		// set cadence assist current target in ADC steps
+		uint16_t ui16_adc_battery_current_target_cadence_assist = (uint16_t)ui32_current_target_cadence_assist_x100 / BATTERY_CURRENT_PER_10_BIT_ADC_STEP_X100;
 		
 		// restore pedal torque delta
 		ui16_adc_pedal_torque_delta = ui16_adc_pedal_torque_delta_temp;
