@@ -295,8 +295,8 @@ HALL_COUNTER_OFFSET_UP:    29 -> 44
 // delay function status (0.1 sec)
 #define DELAY_FUNCTION_STATUS			(uint8_t) (DELAY_MENU_ON / 2)
 
-// delay torque sensor calibration (0.1 sec)
-#define DELAY_DISPLAY_TORQUE_CALIBRATION			250
+// delay torque sensor calibration (25.0 sec)
+#define DELAY_TORQUE_CALIBRATION			250
 
 // display function status
 #define FUNCTION_STATUS_OFF							1

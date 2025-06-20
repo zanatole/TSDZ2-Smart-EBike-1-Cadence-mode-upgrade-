@@ -131,6 +131,8 @@ static uint16_t ui16_human_power_filtered_x10 = 0;
 static uint8_t ui8_torque_sensor_calibrated = TORQUE_SENSOR_CALIBRATED;
 static uint16_t ui16_pedal_weight_x100 = 0;
 static uint16_t ui16_pedal_torque_step_temp = 0;
+static uint8_t ui8_torque_sensor_calibration_counter = 0;
+static uint8_t ui8_torque_sensor_calibration_enabled = 1;
 static uint8_t ui8_torque_sensor_calibration_flag = 0;
 static uint8_t ui8_torque_sensor_calibration_flag_1 = 0;
 static uint8_t ui8_torque_sensor_calibration_flag_2 = 0;
@@ -2486,9 +2488,17 @@ static void uart_receive_package(void)
 			// special riding modes with walk assist button
 			switch (m_configuration_variables.ui8_riding_mode) {	
 				case TORQUE_SENSOR_CALIBRATION_MODE:
-					if (ui8_assist_level != OFF) {	
+#if ENABLE_XH18
+					if (ui8_assist_level != OFF) {
+#elif ENABLE_VLCD5
+					if (ui8_assist_level > ECO) {
+#else
+					if (ui8_assist_level > TOUR) {
+#endif
 						// riding mode recovery at level change
 						m_configuration_variables.ui8_riding_mode = ui8_riding_mode_temp;
+						// clear torque sensor calibration enabled
+						ui8_torque_sensor_calibration_enabled = 0;
 						// clear torque sensor calibration flag
 						ui8_torque_sensor_calibration_flag = 0;
 						// display torque flag 1 disabled
@@ -2621,6 +2631,16 @@ static void uart_receive_package(void)
 					break;
 				
 				default:
+#if !ENABLE_XH18
+					// starting torque sensor calibration counter at power on
+					if((ui8_torque_sensor_calibration_counter < DELAY_TORQUE_CALIBRATION)
+					  &&(!ui8_torque_sensor_calibration_flag)) {
+						ui8_torque_sensor_calibration_counter++;
+					}
+					else {
+						ui8_torque_sensor_calibration_enabled  = 0;
+					}
+#endif
 					// manual setting battery SOC percentage x10 (actual charge)
 					// walk assist button pressed within 5 seconds of power on
 					if ((ui8_walk_assist_button_pressed)&&(!ui8_startup_flag)) {
@@ -2634,7 +2654,12 @@ static void uart_receive_package(void)
 					// torque sensor calibration *********************************
 					else if ((ui8_walk_assist_button_pressed)&&(ui8_startup_flag)
 					  &&(m_configuration_variables.ui8_set_parameter_enabled)
+					  &&(ui8_torque_sensor_calibration_enabled)
+#if ENABLE_XH18
 					  &&(ui8_assist_level == OFF)) {
+#else
+					  &&((ui8_assist_level == OFF)||(ui8_assist_level == ECO))) {
+#endif
 						ui8_torque_sensor_calibration_flag = 1;
 						// starting torque sensor calibration procedure 1
 						ui8_torque_sensor_calibration_flag_1 = 1;
@@ -2656,7 +2681,12 @@ static void uart_receive_package(void)
 						}
 					}
 					// startup assist mode and walk assist mode ******************
+#if ENABLE_XH18
 					else if (ui8_assist_level != OFF) {
+#else
+					else if ((ui8_assist_level > ECO)
+					  ||((ui8_assist_level != OFF)&&(!ui8_torque_sensor_calibration_enabled))) {
+#endif
 #if STARTUP_ASSIST_ENABLED
 						// startup assist mode
 						if ((ui8_walk_assist_button_pressed)&&(ui8_startup_flag)
