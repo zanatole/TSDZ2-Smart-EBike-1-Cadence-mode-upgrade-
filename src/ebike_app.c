@@ -2642,7 +2642,6 @@ static void uart_receive_package(void)
 					break;
 				
 				default:
-#if !ENABLE_XH18
 					// starting torque sensor calibration counter at power on
 					if((ui8_torque_sensor_calibration_counter < DELAY_TORQUE_CALIBRATION)
 					  &&(!ui8_torque_sensor_calibration_flag)) {
@@ -2651,7 +2650,7 @@ static void uart_receive_package(void)
 					else {
 						ui8_torque_sensor_calibration_enabled  = 0;
 					}
-#endif
+
 					// manual setting battery SOC percentage x10 (actual charge)
 					// walk assist button pressed within 5 seconds of power on
 					if ((ui8_walk_assist_button_pressed)&&(!ui8_startup_flag)) {
@@ -2665,22 +2664,19 @@ static void uart_receive_package(void)
 					// torque sensor calibration *********************************
 					else if ((ui8_walk_assist_button_pressed)&&(ui8_startup_flag)
 					  &&(m_configuration_variables.ui8_set_parameter_enabled)
-					  &&(ui8_torque_sensor_calibration_enabled)
-#if ENABLE_XH18
-					  &&(ui8_assist_level == OFF)) {
-#else
-					  &&((ui8_assist_level == OFF)||(ui8_assist_level == ECO))) {
-#endif
-						ui8_torque_sensor_calibration_flag = 1;
-						// starting torque sensor calibration procedure 1
-						ui8_torque_sensor_calibration_flag_1 = 1;
+					  &&(((ui8_torque_sensor_calibration_enabled)&&(ui8_assist_level == ECO))
+						||(ui8_assist_level == OFF))) {
+
+							ui8_torque_sensor_calibration_flag = 1;
+							// starting torque sensor calibration procedure 1
+							ui8_torque_sensor_calibration_flag_1 = 1;
 						
-						// for recovery actual riding mode
-						if (m_configuration_variables.ui8_riding_mode != TORQUE_SENSOR_CALIBRATION_MODE) {
-							ui8_riding_mode_temp = m_configuration_variables.ui8_riding_mode;
-						}
-						// special riding mode (torque sensor calibration)
-						m_configuration_variables.ui8_riding_mode = TORQUE_SENSOR_CALIBRATION_MODE;
+							// for recovery actual riding mode
+							if (m_configuration_variables.ui8_riding_mode != TORQUE_SENSOR_CALIBRATION_MODE) {
+								ui8_riding_mode_temp = m_configuration_variables.ui8_riding_mode;
+							}
+							// special riding mode (torque sensor calibration)
+							m_configuration_variables.ui8_riding_mode = TORQUE_SENSOR_CALIBRATION_MODE;
 					}
 					// cruise mode ***********************************************
 					else if (m_configuration_variables.ui8_riding_mode == CRUISE_MODE) {
