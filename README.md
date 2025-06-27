@@ -23,7 +23,7 @@ This project is being developed and maintained for free by a community of users.
 ## Building and flashing with Java tool
 ### Windows 
 - Install [SDCC](http://sdcc.sourceforge.net/index.php#Download).
-  version 4.1.0 or higher required.
+  version 4.4.0 or higher required.
 - Install [ST Visual Development](http://www.st.com/en/development-tools/stvd-stm8.html).
 - Install [Java](https://www.java.com/endownload/).
 - Open JavaConfigurator.jar customize the parameters and click Compile & Flash
