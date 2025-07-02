@@ -369,8 +369,9 @@ void ebike_app_init(void)
 	uint8_t ui8_i;
 	for (ui8_i = 1; ui8_i < 120; ui8_i++)
 	{
-		uint16_t ui16_temp = (ui16_startup_boost_factor_array[ui8_i - 1] * STARTUP_BOOST_CADENCE_STEP) >> 8;
-		ui16_startup_boost_factor_array[ui8_i] = ui16_startup_boost_factor_array[ui8_i - 1] - ui16_temp;
+		uint32_t ui32_temp = (uint32_t)((ui16_startup_boost_factor_array[ui8_i - 1] << 8)
+			- (ui16_startup_boost_factor_array[ui8_i - 1] * STARTUP_BOOST_CADENCE_STEP));
+		ui16_startup_boost_factor_array[ui8_i] = ui32_temp >> 8;
 	}
 	
 	// enable data displayed on startup
