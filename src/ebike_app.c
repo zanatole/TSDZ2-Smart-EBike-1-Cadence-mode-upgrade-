@@ -369,6 +369,7 @@ void ebike_app_init(void)
 	uint8_t ui8_i;
 	for (ui8_i = 1; ui8_i < 120; ui8_i++)
 	{
+		// Fixed startup boost factor array (to reach zero)
 		uint32_t ui32_temp = (uint32_t)((ui16_startup_boost_factor_array[ui8_i - 1] << 8)
 			- (ui16_startup_boost_factor_array[ui8_i - 1] * STARTUP_BOOST_CADENCE_STEP));
 		ui16_startup_boost_factor_array[ui8_i] = ui32_temp >> 8;
