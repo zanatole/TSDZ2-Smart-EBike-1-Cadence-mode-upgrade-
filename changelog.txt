@@ -1,6 +1,11 @@
 TSDZ2 Open Source Firmware
 for stock displays XH18 - VLCD5 - VLCD6
 
+List of changes v20.1C.6-update-2
+  1 - Fixed torque sensor calibration procedure (VLCD5)
+  2 - Levels set the power target in Cadence Assist mode.
+  3 - Fixed startup boost factor array (to reach zero).
+
 List of changes v20.1C.6-update-1
   1 - Added TSDZ8 to the configurator (for mstrens version).
   2 - Fixed motor phase current bug.

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-version="20.1C.6-0"
+version="20.1C.6-2"
 settings_date=$1
 
 release_folder=$(pwd)/releases
@@ -15,7 +15,7 @@ make clean || true
 
 # Build firmware
 echo Build started...
-make -j3
+make all
 
 # Save new firmware
 echo Copying firmware to release folder.
