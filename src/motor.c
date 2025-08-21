@@ -836,7 +836,10 @@ void TIM1_CAP_COM_IRQHandler(void) __interrupt(TIM1_CAP_COM_IRQHANDLER)
                 ui8_counter_duty_cycle_ramp_up = 0;
 
                 // increment duty cycle
-                if (ui8_g_duty_cycle < PWM_DUTY_CYCLE_MAX) {
+				if (ui8_g_duty_cycle < PWM_DUTY_CYCLE_STARTUP) {
+                    ui8_g_duty_cycle = PWM_DUTY_CYCLE_STARTUP;
+                }	
+                else if (ui8_g_duty_cycle < PWM_DUTY_CYCLE_MAX) {
                     ui8_g_duty_cycle++;
                 }
             }
