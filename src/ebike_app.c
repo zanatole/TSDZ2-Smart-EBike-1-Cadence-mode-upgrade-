@@ -3156,7 +3156,7 @@ static void uart_send_package(void)
 					ui16_display_data = ui16_display_data_factor / (ui16_pedal_weight_x100 / 10U);
 				}
 				else if (ui8_display_torque_sensor_calibration_step_flag) {
-					ui16_display_data = ui16_display_data_factor / (uint16_t)(ui8_torque_sensor_step_to_display * 10U);
+					ui16_display_data = (ui16_display_data_factor / (uint16_t)ui8_torque_sensor_step_to_display) * 10U;
 				}
 				else if (ui8_display_torque_sensor_calibration_value_flag) {
 					ui16_display_data = ui16_display_data_factor / ui16_torque_sensor_value_to_display;
@@ -3166,7 +3166,7 @@ static void uart_send_package(void)
 				switch (ui8_display_data_on_startup) {
 					case 1:
 #if UNITS_TYPE == MILES
-						ui16_display_data = ui16_display_data_factor / (ui16_battery_SOC_percentage_x10 * 10U);
+						ui16_display_data = (ui16_display_data_factor / ui16_battery_SOC_percentage_x10) * 10U;
 #else
 						ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
 #endif
@@ -3204,14 +3204,14 @@ static void uart_send_package(void)
 			  switch (ui8_data_index_array[ui8_data_index]) {
 				case 0:
 #if UNITS_TYPE == MILES
-					ui16_display_data = ui16_display_data_factor / (ui16_motor_temperature_filtered_x10 * 10U);
+					ui16_display_data = (ui16_display_data_factor / ui16_motor_temperature_filtered_x10) * 10U;
 #else
 					ui16_display_data = ui16_display_data_factor / ui16_motor_temperature_filtered_x10;
 #endif
 				  break;
 				case 1:
 #if UNITS_TYPE == MILES
-					ui16_display_data = ui16_display_data_factor / (ui16_battery_SOC_percentage_x10 * 10U);
+					ui16_display_data = (ui16_display_data_factor / ui16_battery_SOC_percentage_x10) * 10U;
 #else
 					ui16_display_data = ui16_display_data_factor / ui16_battery_SOC_percentage_x10;
 #endif
@@ -3241,13 +3241,13 @@ static void uart_send_package(void)
 				  break;
 				case 7:
 #if UNITS_TYPE == MILES
-					ui16_display_data = ui16_display_data_factor / (ui8_pedal_cadence_RPM * 10U);
+					ui16_display_data = (ui16_display_data_factor / ui8_pedal_cadence_RPM) * 10U;
 #else
 					if (ui8_pedal_cadence_RPM > 99) {
 						ui16_display_data = ui16_display_data_factor / ui8_pedal_cadence_RPM;
 					}
 					else {
-						ui16_display_data = ui16_display_data_factor / (ui8_pedal_cadence_RPM * 10U);
+						ui16_display_data = (ui16_display_data_factor / ui8_pedal_cadence_RPM) * 10U;
 					}
 #endif
 				  break;
@@ -3271,7 +3271,7 @@ static void uart_send_package(void)
 				  break;
 				case 12:
 					ui16_duty_cycle_percent = (uint16_t) ((ui8_g_duty_cycle * (uint8_t)100) / PWM_DUTY_CYCLE_MAX) - 1;
-					ui16_display_data = ui16_display_data_factor / (ui16_duty_cycle_percent * 10U);
+					ui16_display_data = (ui16_display_data_factor / ui16_duty_cycle_percent) * 10U;
 				  break;
 				default:
 				  break;
