@@ -244,7 +244,6 @@
                                       <Component id="CB_SMOOTH_START_ENABLED" alignment="0" min="-2" max="-2" attributes="0"/>
                                       <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                                       <Component id="CB_FIELD_WEAKENING_ENABLED" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      <Component id="CB_STARTUP_ASSIST_ENABLED" alignment="0" min="-2" pref="272" max="-2" attributes="0"/>
                                       <Group type="102" alignment="0" attributes="0">
                                           <Component id="jLabel77" min="-2" pref="214" max="-2" attributes="0"/>
                                           <EmptySpace type="separate" max="-2" attributes="0"/>
@@ -256,6 +255,11 @@
                                           <Component id="RB_BOOST_AT_ZERO_CADENCE" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
                                           <Component id="RB_BOOST_AT_ZERO_SPEED" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Component id="CB_STARTUP_ASSIST_ENABLED" min="-2" pref="141" max="-2" attributes="0"/>
+                                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                          <Component id="CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED" min="-2" pref="139" max="-2" attributes="0"/>
                                       </Group>
                                   </Group>
                                   <EmptySpace max="32767" attributes="0"/>
@@ -333,7 +337,10 @@
                               <Component id="TF_SMOOTH_START_RAMP" alignment="3" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
-                          <Component id="CB_STARTUP_ASSIST_ENABLED" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="CB_STARTUP_ASSIST_ENABLED" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
@@ -589,6 +596,15 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="500"/>
                     <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Motor power limit in offroad mode&lt;br&gt;&#xa;Max value depends on the rated&lt;br&gt;&#xa;motor power and the battery capacity&#xa;&lt;/html&gt;"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Speed limit enabled"/>
+                    <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;When enabled, Startup assist uses&lt;br&gt;&#xa;the same speed limit as set for Walk assist.&#xa;&lt;/html&gt;"/>
+                    <Property name="enabled" type="boolean" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                      <Connection code="CB_STARTUP_ASSIST_ENABLED.isSelected()" type="code"/>
+                    </Property>
                   </Properties>
                 </Component>
               </SubComponents>

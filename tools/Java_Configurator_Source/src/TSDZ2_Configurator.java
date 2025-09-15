@@ -419,6 +419,13 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 intAssistLevel5 = DISABLED;
             }
             
+            strLine = in.readLine();
+            if (strLine != null) {
+                CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.setSelected(Boolean.parseBoolean(strLine));
+            }
+            else {
+                CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.setSelected(true);
+            }
             
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(null, "Corrupt .ini file or invalid data", "TSDZ2 Patameter Configurator", JOptionPane.INFORMATION_MESSAGE);
@@ -724,7 +731,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     public TSDZ2_Configurator() {
         initComponents();
         
-        this.setTitle("Parameter Configurator 5.5 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
+        this.setTitle("Parameter Configurator 5.6 for Open Source Firmware TSDZ2 v20.1C.6 and TSDZ8");
         this.setLocationRelativeTo(null);
 
         // update lists
@@ -1351,6 +1358,13 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     }
                     
                     mWriter.println(mstrensHexLine(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex()));     // 130 0=DISABLED 1=BEFORE_ECO 2=AFTER_TURBO
+                    
+                    if (CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.isSelected()) { // 132 STARTUP_ASSIST_SPEED_LIMIT_ENABLED 1";
+                         mWriter.println(mstrensHexLine(1));
+                     }
+                     else {                                                   // 132 STARTUP_ASSIST_SPEED_LIMIT_ENABLED 0";
+                         mWriter.println(mstrensHexLine(0));
+                     }
                     
                      mWriter.println(":00000001FF");   // End of hex file
                  } catch (IOException ioe) {
@@ -2308,6 +2322,16 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                 }
                 iWriter.println(JCB_ASSIST_LEVEL_5_MODE.getSelectedIndex());
                 
+                if (CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.isSelected()) {
+                    text_to_save = "#define STARTUP_ASSIST_SPEED_LIMIT_ENABLED 1";
+                    pWriter.println(text_to_save);
+                }
+                else {
+                    text_to_save = "#define STARTUP_ASSIST_SPEED_LIMIT_ENABLED 0";
+                    pWriter.println(text_to_save);
+                }
+                iWriter.println(CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.isSelected());
+                
                 pWriter.println("\r\n#endif /* CONFIG_H_ */");
 
                 iWriter.close();
@@ -2433,6 +2457,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         JCB_MOTOR_TYPE = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
         TF_BATT_POW_MAX = new javax.swing.JTextField();
+        CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED = new javax.swing.JCheckBox();
         jPanel3 = new javax.swing.JPanel();
         jLabel18 = new javax.swing.JLabel();
         jLabel21 = new javax.swing.JLabel();
@@ -2830,6 +2855,10 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         TF_BATT_POW_MAX.setText("500");
         TF_BATT_POW_MAX.setToolTipText("<html>Motor power limit in offroad mode<br>\nMax value depends on the rated<br>\nmotor power and the battery capacity\n</html>");
 
+        CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.setText("Speed limit enabled");
+        CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.setToolTipText("<html>When enabled, Startup assist uses<br>\nthe same speed limit as set for Walk assist.\n</html>");
+        CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.setEnabled(CB_STARTUP_ASSIST_ENABLED.isSelected());
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -2885,7 +2914,6 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                             .addComponent(CB_SMOOTH_START_ENABLED)
                             .addComponent(jLabel7)
                             .addComponent(CB_FIELD_WEAKENING_ENABLED)
-                            .addComponent(CB_STARTUP_ASSIST_ENABLED, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addComponent(jLabel77, javax.swing.GroupLayout.PREFERRED_SIZE, 214, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
@@ -2895,7 +2923,11 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                                 .addGap(16, 16, 16)
                                 .addComponent(RB_BOOST_AT_ZERO_CADENCE)
                                 .addGap(6, 6, 6)
-                                .addComponent(RB_BOOST_AT_ZERO_SPEED)))
+                                .addComponent(RB_BOOST_AT_ZERO_SPEED))
+                            .addGroup(jPanel6Layout.createSequentialGroup()
+                                .addComponent(CB_STARTUP_ASSIST_ENABLED, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         jPanel6Layout.setVerticalGroup(
@@ -2956,7 +2988,9 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
                     .addComponent(jLabel77, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(TF_SMOOTH_START_RAMP, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(5, 5, 5)
-                .addComponent(CB_STARTUP_ASSIST_ENABLED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(CB_STARTUP_ASSIST_ENABLED)
+                    .addComponent(CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -5805,18 +5839,23 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
         switch (JCB_DISPLAY_TYPE.getSelectedIndex()) {
             case VLCD5:
                 boolDisplayTypeVLCD5 = true;
+                JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(DISABLED);
                 break;
             case VLCD6:
                 boolDisplayTypeVLCD6 = true;
+                JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(DISABLED);
                 break;
             case XH18:
                 boolDisplayTypeXH18 = true;
+                JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(DISABLED);
                 break;
             case C850:
                 boolDisplayType850C = true;
+                JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(BEFORE_ECO);
                 break;
             case EKD01:
                 boolDisplayTypeEKD01 = true;
+                JCB_ASSIST_LEVEL_5_MODE.setSelectedIndex(AFTER_TURBO);
                 break;
             default:
                 break;
@@ -5919,6 +5958,8 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
             CB_STARTUP_ASSIST_ENABLED.setSelected(false);
         }
         CB_STARTUP_ASSIST_ENABLED.setEnabled(!boolCoasterBrake);
+        
+        CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED.setEnabled(CB_STARTUP_ASSIST_ENABLED.isSelected());
     }//GEN-LAST:event_CB_STARTUP_ASSIST_ENABLEDStateChanged
 
     private void BTN_COPY_FILE_INIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BTN_COPY_FILE_INIActionPerformed
@@ -6182,6 +6223,7 @@ public class TSDZ2_Configurator extends javax.swing.JFrame {
     private javax.swing.JCheckBox CB_SET_PARAM_ON_START;
     private javax.swing.JCheckBox CB_SMOOTH_START_ENABLED;
     private javax.swing.JCheckBox CB_STARTUP_ASSIST_ENABLED;
+    private javax.swing.JCheckBox CB_STARTUP_ASSIST_SPEED_LIMIT_ENABLED;
     private javax.swing.JCheckBox CB_STARTUP_BOOST_ON_START;
     private javax.swing.JCheckBox CB_STREET_CRUISE;
     private javax.swing.JCheckBox CB_STREET_MODE_ON_START;

@@ -1,6 +1,11 @@
 TSDZ2 Open Source Firmware
 for stock displays XH18 - VLCD5 - VLCD6
 
+List of changes v20.1C.6-update-3
+  1 - Fixed the SOC display issue.
+  2 - Fixed the delay in motor activation/reactivation.
+  3 - Startup assist, the speed limit can be disabled.
+
 List of changes v20.1C.6-update-2
   1 - Fixed torque sensor calibration procedure (VLCD5)
   2 - Levels set the power target in Cadence Assist mode.

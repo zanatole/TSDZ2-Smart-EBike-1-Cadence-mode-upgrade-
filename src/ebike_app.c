@@ -200,6 +200,7 @@ static uint8_t ui8_smooth_start_counter_set_temp = SMOOTH_START_RAMP_DEFAULT;
 // startup assist
 static uint8_t ui8_startup_assist_flag = 0;
 static uint8_t ui8_startup_assist_adc_battery_current_target = 0;
+static uint8_t ui8_startup_assist_speed_limit_enabled = STARTUP_ASSIST_SPEED_LIMIT_ENABLED;
 
 // motor temperature control
 static uint16_t ui16_adc_motor_temperature_filtered = 0;
@@ -1771,7 +1772,8 @@ static uint8_t ui8_motor_check_goes_alone_timer = 0U;
 	// check speed sensor
 	if ((ui16_motor_speed_erps > MOTOR_ERPS_SPEED_THRESHOLD)
 	  &&(m_configuration_variables.ui8_riding_mode != WALK_ASSIST_MODE)
-	  &&(m_configuration_variables.ui8_riding_mode != CRUISE_MODE)) {
+	  &&(m_configuration_variables.ui8_riding_mode != CRUISE_MODE)
+	  &&(!ui8_startup_assist_flag)) {
 		ui16_check_speed_sensor_counter++;
 	}
 	else {
@@ -2882,8 +2884,8 @@ static void uart_receive_package(void)
 			
 			// set speed limit in street, offroad, walk assist, startup assist, throttle 6km/h mode
 			if ((m_configuration_variables.ui8_riding_mode == WALK_ASSIST_MODE)
-				||(ui8_startup_assist_flag)) {
-				m_configuration_variables.ui8_wheel_speed_max = WALK_ASSIST_THRESHOLD_SPEED;
+				||((ui8_startup_assist_flag)&&(ui8_startup_assist_speed_limit_enabled))) {
+					m_configuration_variables.ui8_wheel_speed_max = WALK_ASSIST_THRESHOLD_SPEED;
 			}
 			else if ((ui8_throttle_mode_array[m_configuration_variables.ui8_street_mode_enabled] == W_O_P_6KM_H_ONLY)
 				&& (ui8_throttle_adc_in)) {
