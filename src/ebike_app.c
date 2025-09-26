@@ -98,6 +98,7 @@ static uint16_t ui16_duty_cycle_percent = 0;
 volatile uint8_t ui8_adc_motor_phase_current_max = ADC_10_BIT_MOTOR_PHASE_CURRENT_MAX;
 static uint8_t ui8_error_battery_overcurrent = 0;
 static uint8_t ui8_error_battery_overcurrent_counter = 0;
+static uint8_t ui8_battery_overcurrent_delay = OVERCURRENT_DELAY;
 static uint8_t ui8_adc_battery_overcurrent = (uint8_t)(ADC_10_BIT_BATTERY_CURRENT_MAX + ADC_10_BIT_BATTERY_EXTRACURRENT);
 static uint8_t ui8_adc_battery_current_max_temp_1 = 0;
 static uint8_t ui8_adc_battery_current_max_temp_2 = 0;
@@ -517,26 +518,27 @@ static void ebike_control_motor(void)
 	// Check battery Over-current (read current here in case PWM interrupt for some error was disabled)
 	// Read in assembler to ensure data consistency (conversion overrun)
 	// E07 (E04 blinking for XH18)
-#if OVERCURRENT_DELAY > 0	// overcurrent error enabled
-	#ifndef __CDT_PARSER__	// avoid Eclipse syntax check
-	__asm
-		ld a, 0x53eb // ADC1->DB5RL
-		cp a, _ui8_adc_battery_overcurrent
-		jrc 00011$
-		mov _ui8_error_battery_overcurrent+0, #ERROR_BATTERY_OVERCURRENT
-	00011$:
-	__endasm;
-	#endif
-	if (ui8_error_battery_overcurrent) {
-		ui8_error_battery_overcurrent_counter++;
+	if (ui8_battery_overcurrent_delay > 0) {	// overcurrent error enabled
+		#ifndef __CDT_PARSER__	// avoid Eclipse syntax check
+		__asm
+			mov _ui8_error_battery_overcurrent+0, #0
+			ld a, 0x53eb // ADC1->DB5RL
+			cp a, _ui8_adc_battery_overcurrent
+			jrc 00011$
+			mov _ui8_error_battery_overcurrent+0, #ERROR_BATTERY_OVERCURRENT
+		00011$:
+		__endasm;
+		#endif
+		if (ui8_error_battery_overcurrent != 0U) {
+			ui8_error_battery_overcurrent_counter++;
+		}
+		else {
+			ui8_error_battery_overcurrent_counter = 0;
+		}
+		if (ui8_error_battery_overcurrent_counter >= ui8_battery_overcurrent_delay) {
+			ui8_system_state = ui8_error_battery_overcurrent;
+		}
 	}
-	else {
-		ui8_error_battery_overcurrent_counter = 0;
-	}
-	if (ui8_error_battery_overcurrent_counter >= OVERCURRENT_DELAY) {
-		ui8_system_state = ui8_error_battery_overcurrent;
-	}
-#endif
 	
     // reset control parameters if... (safety)
     if ((ui8_brake_state)
