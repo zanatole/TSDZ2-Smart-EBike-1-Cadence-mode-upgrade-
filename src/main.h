@@ -26,7 +26,7 @@
  full throttle and look at the batttery current. Adjust
  for the lowest battery current possible.
  ---------------------------------------------------------*/
-#define MOTOR_ROTOR_OFFSET_ANGLE  (uint8_t)2
+#define MOTOR_ROTOR_OFFSET_ANGLE  (uint8_t)3
 #define PHASE_ROTOR_ANGLE_30  (uint8_t)((uint8_t)21  + MOTOR_ROTOR_OFFSET_ANGLE - (uint8_t)64)
 #define PHASE_ROTOR_ANGLE_90  (uint8_t)((uint8_t)64  + MOTOR_ROTOR_OFFSET_ANGLE - (uint8_t)64)
 #define PHASE_ROTOR_ANGLE_150 (uint8_t)((uint8_t)107 + MOTOR_ROTOR_OFFSET_ANGLE - (uint8_t)64)
@@ -190,7 +190,7 @@ HALL_COUNTER_OFFSET_UP:    29 -> 44
 * PEDAL_TORQUE_PER_10_BIT_ADC_STEP_ADV_X100) / PEDAL_TORQUE_PER_10_BIT_ADC_STEP_BASE_X100))
 
 // scale the torque assist target current
-#define TORQUE_ASSIST_FACTOR_DENOMINATOR			120
+#define TORQUE_ASSIST_FACTOR_DENOMINATOR			110
 
 // torque step mode
 #define TORQUE_STEP_DEFAULT							0 // not calibrated
