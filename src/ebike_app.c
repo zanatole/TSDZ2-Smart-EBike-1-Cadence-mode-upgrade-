@@ -166,7 +166,7 @@ static uint32_t ui32_odometer_compensation_mm = ZERO_ODOMETER_COMPENSATION;
 
 // throttle control
 static uint8_t ui8_adc_throttle_assist = 0;
-static uint8_t ui8_throttle_adc_in = 0;
+static uint8_t ui8_throttle_adc_map = 0;
 static uint8_t ui8_throttle_mode_array[2] = {THROTTLE_MODE,STREET_MODE_THROTTLE_MODE};
 
 // cruise control
@@ -1361,15 +1361,15 @@ static void apply_torque_sensor_calibration(void)
 static void apply_throttle(void)
 {
     // map adc value from 0 to 255
-    ui8_throttle_adc_in = map_ui8((uint8_t)(ui16_adc_throttle >> 2),
+    ui8_throttle_adc_map = map_ui8((uint8_t)(ui16_adc_throttle >> 2),
             (uint8_t) ADC_THROTTLE_MIN_VALUE,
             (uint8_t) ADC_THROTTLE_MAX_VALUE,
 			(uint8_t) ASSIST_THROTTLE_MIN_VALUE,
 			(uint8_t) ASSIST_THROTTLE_MAX_VALUE);
 	
 	// / set throttle assist
-	if (ui8_throttle_adc_in) {
-		ui8_adc_throttle_assist = ui8_throttle_adc_in;
+	if (ui8_throttle_adc_map) {
+		ui8_adc_throttle_assist = ui8_throttle_adc_map;
 	}
 	else {
 		ui8_adc_throttle_assist = 0;
@@ -1827,14 +1827,17 @@ static uint8_t ui8_motor_check_goes_alone_timer = 0U;
 
     static uint8_t ui8_throttle_check_counter;
 	
-	if (ui8_throttle_mode_array[m_configuration_variables.ui8_street_mode_enabled]) {
-		if (ui8_throttle_check_counter < THROTTLE_CHECK_COUNTER_THRESHOLD) {
-			ui8_throttle_check_counter++;
+	if (ui8_throttle_check_counter < THROTTLE_CHECK_COUNTER_THRESHOLD) {
+		ui8_throttle_check_counter++;
 		
-			if ((ui16_adc_throttle >> 2) > ADC_THROTTLE_MIN_VALUE_THRESHOLD) {
+		// Power-on battery current check, even if the throttle is disabled
+		// Power-on adc throttle check, only if enabled
+		if ((ui8_battery_current_filtered_x10 > 0U)
+		  || ((ui8_optional_ADC_function == THROTTLE_CONTROL)
+			&& ((ui16_adc_throttle >> 2) > ADC_THROTTLE_MIN_VALUE_THRESHOLD))) {
 				ui8_system_state = ERROR_THROTTLE;
 			}
-		}
+			
 	}
 }
 
@@ -2890,7 +2893,7 @@ static void uart_receive_package(void)
 					m_configuration_variables.ui8_wheel_speed_max = WALK_ASSIST_THRESHOLD_SPEED;
 			}
 			else if ((ui8_throttle_mode_array[m_configuration_variables.ui8_street_mode_enabled] == W_O_P_6KM_H_ONLY)
-				&& (ui8_throttle_adc_in)) {
+				&& (ui8_throttle_adc_map)) {
 					m_configuration_variables.ui8_wheel_speed_max = WALK_ASSIST_THRESHOLD_SPEED;
 			}
 			else {
