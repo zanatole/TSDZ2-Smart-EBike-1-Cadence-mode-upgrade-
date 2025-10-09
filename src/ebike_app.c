@@ -89,7 +89,7 @@ static uint8_t ui8_duty_cycle_ramp_up_inverse_step_default = PWM_DUTY_CYCLE_RAMP
 static uint8_t ui8_duty_cycle_ramp_down_inverse_step = PWM_DUTY_CYCLE_RAMP_DOWN_INVERSE_STEP_DEFAULT;
 static uint8_t ui8_duty_cycle_ramp_down_inverse_step_default = PWM_DUTY_CYCLE_RAMP_DOWN_INVERSE_STEP_DEFAULT;
 static uint16_t ui16_battery_voltage_filtered_x1000 = 0;
-static uint16_t ui16_battery_no_load_voltage_filtered_x10 = 0;
+static uint16_t ui16_battery_pack_resistance_x1000 = BATTERY_PACK_RESISTANCE;
 static uint8_t ui8_battery_current_filtered_x10 = 0;
 static uint8_t ui8_adc_battery_current_max = ADC_10_BIT_BATTERY_CURRENT_MAX;
 static uint8_t ui8_adc_battery_current_target = 0;
@@ -1753,7 +1753,7 @@ static uint8_t ui8_motor_check_goes_alone_timer = 0U;
 	// check cadence sensor
 	if ((ui16_adc_pedal_torque_delta_no_boost > ADC_TORQUE_SENSOR_DELTA_THRESHOLD)
 	  &&(!ui8_startup_assist_flag)&&(ui8_riding_torque_mode)
-	  &&((ui8_pedal_cadence_RPM > 130)||(ui8_pedal_cadence_RPM == 0U))) {
+	  &&(ui8_pedal_cadence_RPM == 0U)) {
 		ui8_check_cadence_sensor_counter++;
 	}
 	else {
@@ -1782,7 +1782,7 @@ static uint8_t ui8_motor_check_goes_alone_timer = 0U;
 		ui16_check_speed_sensor_counter = 0;
 	}
 	
-	if (ui16_wheel_speed_x10) {
+	if (ui16_wheel_speed_x10 > 0U) {
 		ui16_check_speed_sensor_counter = 0;
 	}
 	
@@ -3182,7 +3182,7 @@ static void uart_send_package(void)
 						break;
 					case 2:
 						// battery voltage calibrated x10 for display data
-						ui16_battery_voltage_calibrated_x10 = (ui16_battery_voltage_filtered_x10 * ACTUAL_BATTERY_VOLTAGE_PERCENT) / 100U;
+						ui16_battery_voltage_calibrated_x10 = (ui16_battery_voltage_soc_filtered_x10 * ACTUAL_BATTERY_VOLTAGE_PERCENT) / 100U;
 						ui16_display_data = ui16_display_data_factor / ui16_battery_voltage_calibrated_x10;
 						break;
 					default:
@@ -3227,7 +3227,7 @@ static void uart_send_package(void)
 				  break;
 				case 2:
 					// battery voltage calibrated x10 for display data
-					ui16_battery_voltage_calibrated_x10 = (ui16_battery_voltage_filtered_x10 * ACTUAL_BATTERY_VOLTAGE_PERCENT) / 100;
+					ui16_battery_voltage_calibrated_x10 = (ui16_battery_voltage_soc_filtered_x10 * ACTUAL_BATTERY_VOLTAGE_PERCENT) / 100;
 					ui16_display_data = ui16_display_data_factor / ui16_battery_voltage_calibrated_x10;
 				  break;
 				case 3:
@@ -3445,7 +3445,7 @@ static void calc_watt_hours_used(void)
 	// consumed watt-hours
 	ui32_wh_sum_x10 += ui16_battery_power_x10;
 	// calculate watt-hours X10 since power on
-	ui32_wh_since_power_on_x10 = ui32_wh_sum_x10 / 32400; // 36000 -10% for calibration
+	ui32_wh_since_power_on_x10 = ui32_wh_sum_x10 / 32400; // 36000 -10% calibration to compensate for battery losses
 	// calculate watt-hours X10 since last full charge
 	ui32_wh_x10 = ui32_wh_offset_x10 + ui32_wh_since_power_on_x10;
 }
@@ -3454,12 +3454,12 @@ static void calc_watt_hours_used(void)
 static void check_battery_soc(void)
 {
 #define BATTERY_SOC_COUNTER_THRESHOLD			100 // 10 seconds
-	static uint8_t ui8_no_load_counter = 20;
 	static uint8_t ui8_battery_state_of_charge_temp = 0;
 	static uint8_t ui8_battery_state_of_charge_counter = 0;
 	uint16_t ui16_battery_voltage_x10;
 	uint16_t ui16_battery_SOC_used_x10;
 	uint16_t ui16_actual_battery_SOC_x10;
+	uint16_t ui16_fluctuate_battery_voltage_x10;
 	
 	// battery voltage x10
 	ui16_battery_voltage_x10 = (ui16_battery_voltage_filtered_x1000) / 100;
@@ -3467,19 +3467,13 @@ static void check_battery_soc(void)
 	// filter battery voltage x10
 	ui16_battery_voltage_filtered_x10 = filter(ui16_battery_voltage_x10, ui16_battery_voltage_filtered_x10, 4);
 	
-	// save no load voltage x10 if current is < adc current min for 2 seconds
-	if (ui8_adc_battery_current_filtered < 2) {
-		if (++ui8_no_load_counter > 20) {
-			ui16_battery_no_load_voltage_filtered_x10 = ui16_battery_voltage_x10;
-			ui8_no_load_counter--;
-		}
-	}
-	else {
-		ui8_no_load_counter = 0;
-	}
-
-	// filter battery voltage soc x10
-	ui16_battery_voltage_soc_filtered_x10 = filter(ui16_battery_no_load_voltage_filtered_x10, ui16_battery_voltage_soc_filtered_x10, 3);
+	// calculate flutuate voltage, that depends on the current and battery pack resistance
+	ui16_fluctuate_battery_voltage_x10 = (uint16_t) ((((uint32_t) ui16_battery_pack_resistance_x1000)
+			* ((uint32_t) ui8_battery_current_filtered_x10))
+			/ ((uint32_t) 1000U));
+	
+	// the fluctuate voltage is added to the filtered voltage.
+	ui16_battery_voltage_soc_filtered_x10 =	 ui16_battery_voltage_filtered_x10 + ui16_fluctuate_battery_voltage_x10;
 
 #if ENABLE_VLCD6 || ENABLE_XH18
 	if (ui16_battery_voltage_soc_filtered_x10 > BATTERY_SOC_VOLTS_6_X10) { ui8_battery_state_of_charge = 7; }		// overvoltage
