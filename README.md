@@ -1,3 +1,73 @@
+Cadence Punch and Sliding Power Control
+🎯 Purpose​
+The firmware adds a “punch” feature: a short boost of assistance when you suddenly accelerate your pedaling cadence or apply strong torque. This makes the bike feel more responsive in traffic or when restarting, while still staying within legal limits thanks to a sliding average power limiter.
+
+
+🔹 Punch Trigger​
+The punch can be activated in two ways:
+
+Cadence acceleration
+The controller compares the average cadence over ~0.75 s (WINDOW_PAST) with the average over ~0.3 s (WINDOW_CURRENT).
+If the short‑term cadence is at least +3% higher (punch_threshold_percent = 103) and above 50 rpm (punch_cadence_floor), the punch is triggered.
+High pedal torque
+If the pedal torque ADC value exceeds a threshold (TORQUE_PUNCH_THRESHOLD = 220), the punch is also triggered, even without cadence acceleration.
+
+🔹 Punch Duration and Intensity​
+punch_duration[] → defines how long the punch lasts depending on assist level (e.g. 3 s in ECO, 10 s in TURBO).
+punch_coef_x100[] → defines the intensity multiplier (e.g. 110 = +10% in ECO, 125 = +25% in TURBO).
+PUNCH_RAMPDOWN_SEC → smooth ramp‑down time after punch (default 2 s).
+PUNCH_COOLDOWN_SEC → minimum cooldown before another punch can trigger (default 3 s).
+rampdown_steps → number of steps for the ramp‑down smoothing (default 20).
+
+🔹 Sliding Power Control (Street Compliance)​
+To remain legal, the firmware continuously monitors average power over 2 minutes:
+
+POWER_BUFFER_SIZE = 120 → 120 samples at 1 Hz = 2 minutes.
+THRESHOLD_REDUCE = 80 → if average power > 80% of Street limit, punch is reduced (shorter).
+THRESHOLD_BLOCK = 92 → if average power > 92% of Street limit, punch is blocked.
+STREET_MODE_POWER_LIMIT → defines the legal Street limit (e.g. 290 W for me because it give less than 250W on shaft of motor<250W legal).
+👉 Even if the punch temporarily boosts power, the 2‑minute sliding average ensures the motor never exceeds the legal Street limit in sustained use (250W on the shaft is legal limit for everage power).
+
+
+✅ Summary​
+Punch = short boost triggered by cadence acceleration or high torque, only above a minimum cadence.
+Duration and strength are set by punch_duration[] and punch_coef_x100[].
+Ramp‑down and cooldown make the punch smooth and predictable.
+A 2‑minute sliding power limiter ensures the bike always respects the Street power limit, so the assistance never exceeds what is legally allowed.
+⚖️ Legal Compliance​
+For legal reasons, the firmware always enforces the Street power limit. Even if punch temporarily boosts assistance (by torque or cadence), the 2‑minute sliding average is capped at STREET_MODE_POWER_LIMIT.
+
+If the average approaches the limit, punch is reduced or blocked.
+This ensures the motor never exceeds the legal Street assistance limit in sustained use.
+Offroad mode is only used internally during punch, but the controller automatically returns to Street mode afterwards.
+
+----------------------------------------------------------------------------------------------------------------------------------
+The parameters:
+1. Punch Trigger (cadence and torque)​
+punch_cadence_floor Minimum cadence (in RPM) required before punch can trigger.Example: 50 → punch only works above 50 rpm.
+punch_threshold_percent Relative cadence increase threshold (in %) over a short window.Example: 103 → punch triggers if cadence rises by +3% within ~300 ms.
+TORQUE_PUNCH_THRESHOLD Torque ADC threshold. If pedal torque exceeds this value, punch can also trigger.Example: 220.
+WINDOW_CURRENT / WINDOW_PAST Defines the averaging windows for cadence detection.
+WINDOW_CURRENT = 12 (~300 ms)
+WINDOW_PAST = 30 (~750 ms)The firmware compares the short‑term average (avg_cur) with the longer one (avg_past) to detect acceleration.
+2. Punch Duration and Intensity​
+punch_duration[] Duration of punch per assist level (OFF, ECO, TOUR, SPORT, TURBO).Example: 3 s in ECO, 10 s in TURBO.
+punch_coef_x100[] Multiplicative factor applied during punch (x100).Example: 110 = +10% in ECO, 125 = +25% in TURBO.
+PUNCH_RAMPDOWN_SEC Time for smooth ramp‑down after punch (default 2 s).
+PUNCH_COOLDOWN_SEC Minimum cooldown before punch can trigger again (default 3 s).
+rampdown_steps Number of steps for ramp‑down smoothing (default 20).
+3. Sliding Power Control (Street compliance)​
+POWER_BUFFER_SIZE Size of the rolling buffer for average power (default 120 → 2 minutes).
+POWER_SAMPLE_CYCLES Sampling rate (40 cycles = 1 s).
+THRESHOLD_REDUCE / THRESHOLD_BLOCK Percentage thresholds of the Street power limit:
+Below 80% → punch allowed.
+Between 80–92% → punch reduced (shorter duration).
+Above 92% → punch blocked.
+STREET_MODE_POWER_LIMIT Legal Street power limit (e.g. 250 W).The firmware computes a 2‑minute sliding average of power and ensures it never exceeds this value.
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------
 ![GitHub issues](https://img.shields.io/github/issues/emmebrusa/TSDZ2-Smart-EBike-1) [![Build Action](../../actions/workflows/build.yaml/badge.svg)](../../actions/workflows/build.yaml)
 
 This repository is updated by mbrusa.
