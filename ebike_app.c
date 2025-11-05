@@ -489,10 +489,10 @@ static void handle_punch(void) {
             if (status == PUNCH_REDUCED) {
                 punch_timer = punch_timer / 2; // Durée réduite
             } 
+        }
         else {
             punch_coef_active_x100 = 100;
             m_configuration_variables.ui8_street_mode_enabled = 1; // Street
-        }
         }
         break;
 
@@ -1738,8 +1738,10 @@ static void apply_temperature_limiting(void)
 static void apply_speed_limit(void)
 {
 	if (m_configuration_variables.ui8_wheel_speed_max > 0U) {
-		uint16_t speed_limit_low  = (uint16_t)((uint8_t)(m_configuration_variables.ui8_wheel_speed_max - 2U) * (uint8_t)10U); // casting literal to uint8_t ensures usage of MUL X,A
-		uint16_t speed_limit_high = (uint16_t)((uint8_t)(m_configuration_variables.ui8_wheel_speed_max + 2U) * (uint8_t)10U);
+uint16_t target_speed = m_configuration_variables.ui8_wheel_speed_max * 10;
+    uint16_t margin = (uint16_t)(target_speed * 4 / 100.0); // marge de 4%
+    uint16_t speed_limit_low = target_speed - margin;
+    uint16_t speed_limit_high = target_speed ; //aucune marge appliquee en itesse haute
 		
         // set battery current target
         ui8_adc_battery_current_target = (uint8_t)map_ui16(ui16_wheel_speed_x10,
