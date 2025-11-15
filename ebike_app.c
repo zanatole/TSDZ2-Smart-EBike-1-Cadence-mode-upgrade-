@@ -757,6 +757,10 @@ static void ebike_control_motor(void)
 		ui8_field_weakening_enabled = 0;
 	}
 #endif
+
+    // Gérer l'état du Punch à chaque cycle
+    // (Cette fonction met à jour 'punch_coef_active_x100' et le 'street_mode' pour offroad temporaire)
+    handle_punch();
 	
     // select riding mode
     switch (m_configuration_variables.ui8_riding_mode) {
@@ -779,6 +783,31 @@ static void ebike_control_motor(void)
 	apply_temperature_limiting();
 #endif
 	
+    
+    // --- AJOUT : APPLICATION GLOBALE DU PUNCH ---
+    // Applique le boost sur le courant cible final (défini par l'assistance OU l'accélérateur)
+    // 'punch_coef_active_x100' est à 100 (aucun effet) s'il n'y a pas de punch actif.
+    if (punch_coef_active_x100 > 100U)
+    {
+        // Attention : ui8_adc_battery_current_target est un uint8_t (0-255)
+        // Il faut utiliser un type plus grand pour la multiplication
+        uint16_t ui16_current_target = (uint16_t)ui8_adc_battery_current_target;
+        
+        ui16_current_target = (ui16_current_target * punch_coef_active_x100) / 100U;
+
+        // On s'assure de ne pas dépasser la limite matérielle (ui8_adc_battery_current_max)
+        // ou la limite du type de donnée (255)
+        if (ui16_current_target > ui8_adc_battery_current_max) 
+        {
+            ui8_adc_battery_current_target = ui8_adc_battery_current_max;
+        }
+        else 
+        {
+            ui8_adc_battery_current_target = (uint8_t)ui16_current_target;
+        }
+    }
+    // --- FIN DU BLOC PUNCH ---
+    
     // speed limit
     apply_speed_limit();
 	
@@ -1122,14 +1151,15 @@ static void apply_cadence_assist(void)
     if (ui8_pedal_cadence_RPM > 0U) {
         
         // --- Mise à jour Punch avant tout calcul ---
-        handle_punch();
+        //handle_punch();
         
         // simulated pedal torque delta (calcul de base >>2 puis boost)
         uint16_t base_delta = ((uint16_t)ui8_riding_mode_parameter + (uint16_t)ui8_pedal_cadence_RPM) >> 2;
 
         // Multiplication en entier avec coef x100
-        ui16_adc_pedal_torque_delta = (base_delta * punch_coef_active_x100) / 100;
-
+        //ui16_adc_pedal_torque_delta = (base_delta * punch_coef_active_x100) / 100;
+        
+        ui16_adc_pedal_torque_delta = base_delta; //punch boost in ebike_control_motor not here
         
         // smooth start
         if (ui8_smooth_start_counter_set < SMOOTH_START_RAMP_DEFAULT) {
